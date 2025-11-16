@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Personal Design — Premium Design Studio</title>
+  <meta name="description" content="Personal Design — premium logos, posters, social content, promo videos & 3D visuals. Free sample for first project." />
+  <meta name="theme-color" content="#050506" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+  /* ==========================
+     VARIABLES & RESET
+     ========================== */
+  :root{
+    --nav-h:72px;
+    --maxw:1200px;
+    --bg-deep: #050506;
+    --bg-mid:  #0f0f10;
+    --text:    #e9e9ee;
+    --muted:   rgba(233,233,238,0.68);
+    --glass:   rgba(255,255,255,0.03);
+    --border:  rgba(255,255,255,0.04);
+    --accent:  #00d7a8;            /* mint accent */
+    --accent2: #4db4ff;            /* blue accent */
+    --card-shadow: 0 16px 50px rgba(2,6,23,0.6);
+    --radius: 14px;
+    --transition: 320ms cubic-bezier(.2,.9,.2,1);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color:var(--text);
+    background: var(--bg-deep);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    line-height:1.45;
+    -webkit-text-size-adjust:100%;
+    padding-top: var(--nav-h);
+  }
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block;height:auto}
+
+  .container{max-width:var(--maxw);width:calc(100% - 48px);margin:0 auto}
+
+  /* Анимированный фон */
+  #gradient-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    --gradient-color-1: var(--bg-mid);
+    --gradient-color-2: var(--accent);
+    --gradient-color-3: var(--accent2);
+    --gradient-color-4: var(--bg-deep);
+  }
+
+  .grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: url('https://uploads-ssl.webflow.com/62c0a4e766e8c383c3e29f0f/62c0a4e766e8c31d10e29f3d_noise.png');
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  /* ==========================
+     GRID SYSTEM FOR HERO SECTION
+     ========================== */
+  .hero-grid-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    opacity: 0.3;
+  }
+
+  .hero-grid {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: calc(100% + 120px);
+    background: 
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 60px 40px;
+    transform: rotateX(15deg);
+    transform-origin: top center;
+    mask-image: 
+      linear-gradient(to top, transparent 0%, black 20%),
+      linear-gradient(to bottom, transparent 0%, black 30%),
+      linear-gradient(to left, transparent 0%, black 10%),
+      linear-gradient(to right, transparent 0%, black 10%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .stars-container {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    width: 100%;
+    height: calc(100% + 120px);
+    transform: rotateX(15deg);
+    transform-origin: top center;
+  }
+
+  .star {
+    position: absolute;
+    opacity: 0;
+    filter: blur(0.5px);
+  }
+
+  @keyframes starFall {
+    0% {
+      transform: translateY(0) scale(0.8);
+      opacity: 0;
+      filter: blur(0.5px) brightness(1);
+    }
+    10% {
+      opacity: 0.9;
+      filter: blur(0.5px) brightness(1.8);
+    }
+    40% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    85% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    90% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    95% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    100% {
+      transform: translateY(calc(100% + 180px)) scale(1.1);
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+  }
+
+  /* ==========================
+     NAVBAR
+     ========================== */
+  header.nav{
+    position:fixed;
+    top:12px;left:0;right:0;
+    display:flex;justify-content:center;
+    z-index:80;pointer-events:none;
+  }
+  .nav-inner{
+    width:calc(100% - 32px);
+    max-width:var(--maxw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(0,0,0,0.02));
+    border-radius:12px;
+    padding:10px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:14px;
+    box-shadow:var(--card-shadow);
+    border:1px solid var(--border);
+    backdrop-filter: blur(6px) saturate(120%);
+    pointer-events:auto;
+    transition: background var(--transition), transform var(--transition);
+  }
+  .nav-inner.scrolled{ transform: translateY(-4px); background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(0,0,0,0.04)); }
+
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{
+    width:56px;height:56px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Playfair Display",serif;font-weight:700;font-size:20px;
+    color:var(--accent); background: linear-gradient(135deg,#081018,#111111);
+    box-shadow: 0 8px 24px rgba(2,6,23,0.55);
+  }
+  nav ul{display:flex;gap:18px;align-items:center;list-style:none}
+  .nav-link{color:var(--muted);font-weight:600;font-size:14px;padding:8px 10px;border-radius:8px;transition:var(--transition)}
+  .nav-link:hover{color:var(--text);transform:translateY(-2px)}
+  .nav-cta{padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#02120c;font-weight:700;box-shadow:0 8px 30px rgba(0,215,168,0.06)}
+
+  .btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #02120c;
+    font-weight: 700;
+    box-shadow: 0 8px 30px rgba(0, 215, 168, 0.06);
+    display: inline-block;
+    transition: var(--transition);
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 215, 168, 0.15);
+  }
+
+  .menu-toggle{display:none;background:transparent;border:0;color:var(--text);font-size:20px;cursor:pointer}
+  @media (max-width:900px){ nav ul{display:none} .menu-toggle{display:block} }
+
+  /* ==========================
+     HERO
+     ========================== */
+  .hero{
+    position:relative;
+    min-height: calc(100vh - var(--nav-h));
+    display:flex;align-items:center;padding:84px 0 60px;
+    overflow: hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;inset:0;
+    background: linear-gradient(180deg, rgba(2,6,23,0.05), rgba(2,6,23,0.15) 60%);
+    z-index:0;
+    pointer-events:none;
+  }
+  .hero .hero-inner{position:relative;z-index:2;max-width:840px;margin:0 auto;text-align:center;padding:20px}
+  .eyebrow{color:var(--accent);text-transform:uppercase;letter-spacing:1.6px;font-weight:700;font-size:12px;margin-bottom:12px}
+  .hero-title{font-family:"Playfair Display",serif;font-size:44px;line-height:1.02;margin:0 0 16px;color:var(--text)}
+  .hero-sub{color:var(--muted);font-size:17px;max-width:64ch;margin:0 auto 22px}
+  .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+
+  .badges{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+  .badge{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+    border:1px solid var(--border);
+    padding:10px 14px;border-radius:10px;font-weight:700;font-size:15px;color:var(--text);
+    box-shadow:0 8px 30px rgba(0,0,0,0.45);
+  }
+  .badge small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+
+  /* ==========================
+     SECTIONS, PANELS & GRID
+     ========================== */
+  section{padding:72px 0}
+  .section-title{text-align:center;margin-bottom:44px}
+  .section-title h2{font-size:30px;margin-bottom:8px}
+  .section-title p{color:var(--muted);max-width:760px;margin:0 auto}
+
+  .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+  .feature{
+    background:var(--glass);
+    border-radius:12px;padding:22px;border:1px solid var(--border);
+    text-align:center;transition:transform var(--transition), box-shadow var(--transition);box-shadow:0 10px 30px rgba(0,0,0,0.45)
+  }
+  .feature:hover{transform:translateY(-8px);box-shadow:0 22px 60px rgba(0,0,0,0.6)}
+  .feature .icon{font-size:26px;color:var(--accent2);margin-bottom:10px}
+  .feature h4{margin-bottom:6px;color:var(--text)}
+
+  .portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .project{
+    position:relative;border-radius:12px;overflow:hidden;padding:18px;
+    background: linear-gradient(135deg, rgba(77,181,255,0.03), rgba(0,0,0,0.03));
+    border:1px solid var(--border); display:flex;flex-direction:column;justify-content:flex-end;min-height:220px;
+  }
+  .project .meta{font-weight:700;color:var(--text);letter-spacing:0.2px}
+  .project p{color:var(--muted);margin-top:8px}
+
+  .services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .service{
+    padding:20px;border-radius:12px;background:var(--glass);border:1px solid var(--border);text-align:center;transition:var(--transition)
+  }
+  .service:hover{transform:translateY(-8px);box-shadow:0 20px 40px rgba(0,0,0,0.6)}
+  .service .icon{font-size:22px;color:var(--accent);margin-bottom:10px}
+
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+    border:1px solid var(--border);
+    border-radius:12px;padding:18px;
+    box-shadow:var(--card-shadow);
+    backdrop-filter: blur(6px) saturate(120%);
+  }
+
+  .contact-grid{display:grid;grid-template-columns:1fr 420px;gap:24px}
+  .form-control{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text);font-family:inherit}
+
+  footer{padding:56px 0;border-top:1px solid rgba(255,255,255,0.02);margin-top:40px;color:var(--muted)}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity 600ms ease, transform 600ms cubic-bezier(.2,.9,.2,1)}
+  .reveal.visible{opacity:1;transform:none}
+
+  /* Form Messages */
+  .success-message {
+    background: var(--accent);
+    color: #02120c;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .error-message {
+    background: #ef4444;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  .loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  @media (max-width:1100px){
+    .features{grid-template-columns:repeat(2,1fr)}
+    .portfolio-grid{grid-template-columns:repeat(2,1fr)}
+    .services-grid{grid-template-columns:repeat(2,1fr)}
+    .contact-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:760px){
+    header.nav{top:8px}
+    .nav-inner{padding:8px}
+    .hero{padding:64px 0 40px}
+    .hero-title{font-size:30px}
+    .features, .services-grid, .portfolio-grid{grid-template-columns:1fr}
+    .brand .logo{width:46px;height:46px;font-size:18px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important}
+    .reveal{transition:none;transform:none;opacity:1}
+  }
+  </style>
+</head>
+<body>
+
+    <canvas id="gradient-canvas"></canvas>
+    <div class="grain-overlay"></div>
+
+    <header class="nav" role="banner">
+    <div class="nav-inner container" role="navigation" aria-label="Main navigation" id="navInner">
+      <div class="brand" aria-hidden="false">
+        <div class="logo">PD</div>
+        <div style="line-height:1">
+          <div style="font-weight:800">Personal Design</div>
+          <div style="font-size:12px;color:var(--muted)">Premium Creative Studio</div>
+        </div>
+      </div>
+
+      <nav aria-label="Primary">
+        <ul>
+          <li><a class="nav-link" href="#about">About</a></li>
+          <li><a class="nav-link" href="#portfolio">Portfolio</a></li>
+          <li><a class="nav-link" href="#services">Services</a></li>
+          <li><a class="nav-link" href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <a class="nav-cta" href="#contact">Get in touch</a>
+        <button class="menu-toggle" aria-label="Open menu" title="Open menu" onclick="toggleMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+        <section class="hero" aria-labelledby="hero-heading">
+      <!-- GRID SYSTEM -->
+      <div class="hero-grid-container">
+        <div class="hero-grid"></div>
+        <div class="stars-container" id="stars-container">
+          <!-- Звезды будут добавлены через JS -->
+        </div>
+      </div>
+
+      <div class="hero-inner container reveal">
+        <div class="eyebrow">Premium Design & Motion</div>
+        <h1 id="hero-heading" class="hero-title">We craft premium logos, posters, social content, promo videos & 3D visuals.</h1>
+      <p class="hero-sub">Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.</p>
+
+        <div class="hero-cta">
+          <a class="btn" href="#portfolio">View Our Work</a>
+          <a class="btn" href="#contact" style="background:transparent;border:1px solid var(--border);color:var(--muted)">Get Free Sample</a>
+        </div>
+
+        <div class="badges" aria-hidden="true">
+          <div class="badge">
+            150+ <small>Projects Completed</small>
+          </div>
+          <div class="badge">
+            98% <small>Client Satisfaction</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+        <section id="about" class="container reveal" aria-labelledby="about-title">
+      <div class="section-title">
+        <h2 id="about-title">Who we are</h2>
+        <p>We help businesses stand out with premium design, quick turnaround and thoughtful visuals optimized for attention and conversion.</p>
+      </div>
+
+      <div class="features">
+        <div class="feature reveal">
+          <div class="icon"><i class="fas fa-palette"></i></div>
+          <h4>Brand & Identity</h4>
+          <p>Create logos and systems that scale across web, packaging and media.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="icon"><i class="fas fa-video"></i></div>
+          <h4>Motion & Video</h4>
+          <p>Short promo videos, Reels edits and product promos tuned for performance.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="icon"><i class="fas fa-cube"></i></div>
+          <h4>3D & Renders</h4>
+          <p>Photoreal product renders and mockups for ads and ecommerce.</p>
+        </div>
+      </div>
+    </section>
+
+        <section id="portfolio" class="container reveal" aria-labelledby="portfolio-title">
+      <div class="section-title">
+        <h2 id="portfolio-title">Selected Work</h2>
+        <p>Hand-picked projects — identity, visuals and motion that drove results.</p>
+      </div>
+
+      <div class="portfolio-grid">
+        <article class="project reveal" aria-label="Logo for CoffeeHub">
+          <div class="meta">Logo for CoffeeHub</div>
+          <p>Modern mark — applied across packaging and web.</p>
+        </article>
+
+        <article class="project reveal" aria-label="Restaurant Menu">
+          <div class="meta">Restaurant Menu</div>
+          <p>Clean layout focused on appetite and conversion.</p>
+        </article>
+
+        <article class="project reveal" aria-label="Instagram Campaign">
+          <div class="meta">Instagram Campaign</div>
+          <p>Coherent visual system for multi-platform ads and posts.</p>
+        </article>
+      </div>
+
+      <div style="text-align:center;margin-top:18px">
+        <a class="btn" href="#" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</a>
+      </div>
+    </section>
+
+        <section id="services" class="container reveal" aria-labelledby="services-title">
+      <div class="section-title">
+        <h2 id="services-title">Services</h2>
+        <p>Full-service creative production from quick assets to brand systems.</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service reveal">
+            <div class="icon"><i class="fas fa-pen-nib"></i></div>
+          <h4>Logo & Branding</h4>
+          <p>Logo, typography, color and asset systems.</p>
+        </div>
+
+        <div class="service reveal">
+            <div class="icon"><i class="fas fa-image"></i></div>
+          <h4>Graphic Design</h4>
+          <p>Posters, banners, social content and ad creatives.</p>
+        </div>
+
+        <div class="service reveal">
+          <div class="icon"><i class="fas fa-film"></i></div>
+            <h4>Video Editing</h4>
+          <p>Short-form ads, promos and product videos for socials.</p>
+        </div>
+
+        <div class="service reveal">
+            <div class="icon"><i class="fas fa-cube"></i></div>
+          <h4>3D Visualization</h4>
+          <p>Product renders, mockups and animated presentations.</p>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:22px">
+        <a class="btn" href="#contact">Request a free sample</a>
+      </div>
+    </section>
+
+        <section id="contact" class="container reveal" aria-labelledby="contact-title">
+      <div class="section-title">
+        <h2 id="contact-title">Get in touch</h2>
+        <p>Ready to elevate your visual presence? Send a short brief or request a free sample.</p>
+      </div>
+
+      <div class="contact-grid">
+        <form id="contactForm" class="panel reveal" aria-label="Contact form">
+          <div id="successMessage" class="success-message" style="display:none;">
+            Thank you! Your message has been sent. We'll get back to you within 24 hours.
+          </div>
+          <div id="errorMessage" class="error-message" style="display:none;"></div>
+          
+          <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:160px">
+              <label for="name">Name</label>
+              <input id="name" name="name" class="form-control" required placeholder="Your name">
+            </div>
+            <div style="flex:1;min-width:160px">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" class="form-control" required placeholder="you@example.com">
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label for="project">Project type</label>
+            <select id="project" name="project" class="form-control" required>
+                <option value="">Select</option>
+                <option value="logo">Logo</option>
+                <option value="video">Video</option>
+                <option value="3d">3D</option>
+                <option value="other">Other</option>
+              </select>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <label for="message">Brief</label>
+              <textarea id="message" name="message" class="form-control" placeholder="Describe your project or request a sample" rows="4"></textarea>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <button type="submit" class="btn" id="submitBtn">Send request</button>
+            <div style="color:var(--muted);font-size:13px">We typically reply within 24 hours.</div>
+          </div>
+        </form>
+
+        <aside class="panel reveal" aria-labelledby="contact-panel">
+          <h3 id="contact-panel">Contact Information</h3>
+          <p style="color:var(--muted)">We're here to help bring your creative vision to life.</p>
+
+          <div style="margin-top:14px">
+            <p><i class="fas fa-envelope"></i> <a href="mailto:hello@personaldesign.com" style="color:var(--muted)">hello@personaldesign.com</a></p>
+            <p><i class="fas fa-phone"></i> <span style="color:var(--muted)">+353 1 234 5678</span></p>
+            <p><i class="fas fa-map-marker-alt"></i> <span style="color:var(--muted)">Dublin, Ireland</span></p>
+          </div>
+
+          <div style="margin-top:16px">
+            <div style="color:var(--muted)">Follow</div>
+              <div style="display:flex;gap:10px;margin-top:10px">
+              <a href="#" aria-label="Instagram" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Behance" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-behance"></i></a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+    <footer>
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="max-width:540px">
+          <div style="font-weight:800;font-size:18px">Personal Design</div>
+          <p style="color:var(--muted);margin-top:8px">Premium design, video and 3D solutions. Fast, modern and affordable.</p>
+        </div>
+
+        <div style="display:flex;gap:40px">
+          <div>
+            <div style="font-weight:700;margin-bottom:8px">Quick links</div>
+              <nav style="display:flex;flex-direction:column;gap:8px;color:var(--muted)">
+              <a href="#about">About</a>
+                <a href="#portfolio">Portfolio</a>
+                <a href="#services">Services</a>
+                  <a href="#contact">Contact</a>
+            </nav>
+          </div>
+
+          <div>
+              <div style="font-weight:700;margin-bottom:8px">Services</div>
+            <nav style="display:flex;flex-direction:column;gap:8px;color:var(--muted)">
+                <a href="#">Logo & Branding</a>
+                <a href="#">Graphic Design</a>
+                <a href="#">Video Editing</a>
+                <a href="#">3D Visualization</a>
+            </nav>
+            </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:30px;color:var(--muted)">© <span id="year"></span> Personal Design. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+  // Basic functionality
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', function(e){
+      const href = this.getAttribute('href');
+      if(!href || href === '#') return;
+      e.preventDefault();
+      const el = document.querySelector(href);
+      if(!el) return;
+      const offset = window.pageYOffset + el.getBoundingClientRect().top - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72) - 12;
+      window.scrollTo({ top: offset, behavior: 'smooth' });
+    });
+  });
+
+  // Mobile menu
+  let mobileMenuOpen = false;
+  function toggleMenu(){
+    mobileMenuOpen = !mobileMenuOpen;
+    const ul = document.querySelector('nav ul');
+    if(!ul) return;
+    if(mobileMenuOpen){
+      ul.style.display = 'flex';
+      ul.style.position = 'fixed';
+      ul.style.top = '86px';
+      ul.style.right = '20px';
+      ul.style.flexDirection = 'column';
+      ul.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03))';
+      ul.style.padding = '12px';
+      ul.style.borderRadius = '12px';
+      ul.style.boxShadow = '0 18px 50px rgba(0,0,0,0.6)';
+    } else {
+      ul.style.display = '';
+      ul.style.position = '';
+      ul.style.top = '';
+      ul.style.right = '';
+      ul.style.flexDirection = '';
+      ul.style.background = '';
+      ul.style.padding = '';
+      ul.style.borderRadius = '';
+      ul.style.boxShadow = '';
+    }
+  }
+  window.toggleMenu = toggleMenu;
+
+  // Reveal animations
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        en.target.classList.add('visible');
+        obs.unobserve(en.target);
+      }
+    });
+  }, {threshold: 0.12});
+  document.querySelectorAll('.reveal').forEach(el=>{
+    observer.observe(el);
+  });
+
+  // Nav scroll effect
+  const navInner = document.getElementById('navInner');
+  window.addEventListener('scroll', ()=>{
+    if(window.scrollY > 40) navInner.classList.add('scrolled');
+    else navInner.classList.remove('scrolled');
+  });
+
+  // Reduced motion
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.querySelectorAll('.reveal').forEach(el=>{
+      el.classList.add('visible');
+      el.style.transition = 'none';
+    });
+  }
+</script>
+<script>
+// STAR ANIMATION SYSTEM
+  const starsContainer = document.getElementById('stars-container');
+  
+  // Настройки для 5 звезд одновременно
+  const starSettings = {
+    starsPerLaunch: 1,
+    launchInterval: 2000, // ИЗМЕНИЛ: 2000мс = 2 секунды
+    maxConcurrent: 5,
+    currentCount: 0
+  };
+
+  function calculateStarLines() {
+    const gridSize = 60;
+    const containerWidth = window.innerWidth;
+    const totalLines = Math.floor(containerWidth / gridSize);
+    
+    const starLines = [];
+    for (let i = 4; i < totalLines - 4; i++) {
+      starLines.push(i * gridSize);
+    }
+    return starLines;
+  }
+
+  function createStar(linePosition) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = linePosition + 'px';
+    star.style.top = '-30px';
+    star.style.width = '1px';
+    star.style.height = (40 + Math.random() * 20) + 'px';
+    star.style.background = `linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(255,255,255,${0.8 + Math.random() * 0.2}) 20%, 
+      rgba(255,255,255,${0.4 + Math.random() * 0.3}) 50%, 
+      rgba(255,255,255,${0.1 + Math.random() * 0.2}) 80%, 
+      transparent 100%)`;
+    star.style.borderRadius = '50%';
+    star.style.opacity = '0';
+    star.style.filter = 'blur(0.5px)';
+    starsContainer.appendChild(star);
+    
+    return star;
+  }
+
+  function getRandomLine(starLines) {
+    return starLines[Math.floor(Math.random() * starLines.length)];
+  }
+  
+  function launchStar() {
+    const starLines = calculateStarLines();
+    
+    if (starSettings.currentCount < starSettings.maxConcurrent) {
+      const linePosition = getRandomLine(starLines);
+      const star = createStar(linePosition);
+      starSettings.currentCount++;
+      
+      const duration = 1.2 + Math.random() * 0.6;
+      star.style.animation = `starFall ${duration}s ease-out forwards`;
+      
+      setTimeout(() => {
+        if (star.parentNode) {
+          star.parentNode.removeChild(star);
+        }
+        starSettings.currentCount--;
+      }, duration * 1000);
+    }
+    
+    setTimeout(launchStar, starSettings.launchInterval);
+  }
+
+  function handleResize() {
+    // Автоматическая адаптация при изменении размера
+  }
+
+  window.addEventListener('resize', handleResize);
+  
+  window.addEventListener('load', () => {
+    setTimeout(launchStar, 1000);
+  });
+</script>
+
+<style>
+  @keyframes starFall {
+    0% {
+      transform: translateY(0) scale(0.8);
+      opacity: 0;
+      filter: blur(0.5px) brightness(1);
+    }
+    10% {
+      opacity: 0.9;
+      filter: blur(0.5px) brightness(1.8);
+    }
+    40% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    85% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    90% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    95% {
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+    100% {
+      transform: translateY(calc(100vh + 200px)) scale(1.1);
+      opacity: 1;
+      filter: blur(0.5px) brightness(2.5);
+    }
+  }
+
+  .hero-grid-container,
+  .stars-container {
+    width: 100vw !important;
+    left: 0 !important;
+  }
+
+  .hero-grid {
+    width: 100vw !important;
+  }
+</style>
+
+<script>
+  // Gradient background - FIXED VERSION
+  function Gradient() {
+    "use strict";
+    var t = this;
+    t.gradient = 0, t.width = 0, t.height = 0, t.width_half = 0, t.height_half = 0, t.c0 = 0, t.c1 = 0, t.c2 = 0, t.c3 = 0, t.ig = 0, t.grid = 0, t.canvas = 0, t.ctx = 0, t.tx = 0, t.ty = 0, t.painting = 0, t.c = document.createElement("canvas"), t.texture = t.c.getContext("2d"), t.c.width = 128, t.c.height = 128, t.pattern = t.texture.createLinearGradient(0, 0, 0, 128), t.pattern.addColorStop(0, "#E4E4E4"), t.pattern.addColorStop(.5, "#808080"), t.pattern.addColorStop(1, "#E4E4E4"), t.texture.fillStyle = t.pattern, t.texture.fillRect(0, 0, 128, 128), t.update = function (i) {
+      t.c0 = t.get(i, .001), t.c1 = t.get(i, .002), t.c2 = t.get(i, .003), t.c3 = t.get(i, .004), requestAnimationFrame(function () { t.paint() })
+    }, t.get = function (t, i) {
+      var e = i * t;
+      return [128 + 128 * Math.sin(e), 128 + 128 * Math.sin(e + 2 * Math.PI / 3), 128 + 128 * Math.sin(e + 4 * Math.PI / 3)]
+    }, t.paint = function () {
+      if (t.painting) return !1;
+      t.painting = !0;
+      for (var i = 0; i < 4096; i++) t.grid[i] = .5 * (Math.sin(.001 * Date.now() + i % 64 * t.tx) + Math.cos(.001 * Date.now() + Math.floor(i / 64) * t.ty));
+      for (var e = 0, n = 0; n < t.height; n++) for (var r = 0; r < t.width; r++) {
+        var o = Math.floor(63 * (r / t.width)), a = Math.floor(63 * (n / t.height)), h = t.grid[a * 64 + o], c = r - t.width_half, d = n - t.height_half, l = c * c + d * d, f = 1 - l / t.dist, u = t.ig.data;
+        u[e++] = t.c0[0] * h + t.c1[0] * f, u[e++] = t.c0[1] * h + t.c1[1] * f, u[e++] = t.c0[2] * h + t.c1[2] * f, u[e++] = t.c0[0] * .5
+      }
+      t.ctx.putImageData(t.ig, 0, 0), t.painting = !1
+    }, t.connect = function (i) {
+      // FIX: Check if canvas exists before getting context
+      t.canvas = document.getElementById(i);
+      if (!t.canvas) {
+        console.warn('Canvas element not found:', i);
+        return;
+      }
+      t.ctx = t.canvas.getContext("2d");
+      if (!t.ctx) {
+        console.warn('Could not get canvas context');
+        return;
+      }
+      t.resize(), window.addEventListener("resize", t.resize, !1), t.grid = new Array(4096);
+      for (var e = 0; e < 4096; e++) t.grid[e] = 0;
+      t.tx = 1 / 64, t.ty = 1 / 64, t.dist = Math.pow(t.width_half, 2) + Math.pow(t.height_half, 2)
+    }, t.resize = function () {
+      if (!t.canvas) return;
+      t.width = window.innerWidth, t.height = window.innerHeight, t.width_half = t.width >> 1, t.height_half = t.height >> 1, t.dist = Math.pow(t.width_half, 2) + Math.pow(t.height_half, 2), t.canvas.setAttribute("width", t.width), t.canvas.setAttribute("height", t.height), t.ig = t.ctx.getImageData(0, 0, t.width, t.height)
+    }, t.initGradient = function (i) {
+      t.connect(i);
+      // FIX: Check if canvas was successfully connected
+      if (!t.canvas || !t.ctx) {
+        console.warn('Gradient initialization failed - canvas not available');
+        return;
+      }
+      t.c0 = [0, 0, 0], t.c1 = [0, 0, 0], t.c2 = [0, 0, 0], t.c3 = [0, 0, 0];
+      var e = window.getComputedStyle(document.getElementById(i)), n = e.getPropertyValue("--gradient-color-1").trim() || "#000000", r = e.getPropertyValue("--gradient-color-2").trim() || "#000000", o = e.getPropertyValue("--gradient-color-3").trim() || "#000000", a = e.getPropertyValue("--gradient-color-4").trim() || "#000000";
+      t.c0 = t.hexToRgb(n), t.c1 = t.hexToRgb(r), t.c2 = t.hexToRgb(o), t.c3 = t.hexToRgb(a), t.update(Date.now()), setInterval(function () { t.update(Date.now()) }, 50)
+    }, t.hexToRgb = function (t) {
+      var i = t.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, function (t, i, e, n) { return i + i + e + e + n + n }), e = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(i);
+      return e ? [parseInt(e[1], 16), parseInt(e[2], 16), parseInt(e[3], 16)] : [0, 0, 0]
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!motionQuery.matches) {
+      // FIX: Wait a bit to ensure canvas is available
+      setTimeout(() => {
+        const gradient = new Gradient();
+        try {
+          gradient.initGradient('#gradient-canvas');
+        } catch (error) {
+          console.warn('Gradient initialization failed:', error);
+        }
+      }, 100);
+    }
+  });
+</script>
+
+<script>
+// Contact form submission - SINGLE VERSION
+(function() {
+    const contactForm = document.getElementById('contactForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    console.log('✅ Form elements found!');
+
+    if(contactForm && !contactForm.hasListener) {
+        console.log('✅ Adding submit event listener');
+        
+        contactForm.hasListener = true; // Помечаем что обработчик добавлен
+        
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('🔄 Form submission started');
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const project = document.getElementById('project').value;
+            const message = document.getElementById('message').value.trim();
+
+            console.log('📝 Form data:', { name, email, project, message });
+
+            if(!name || !email || !project) {
+                console.log('❌ Validation failed');
+                showFormError('Please fill name, email and project type.');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.textContent = 'Sending...';
+            submitBtn.disabled = true;
+            errorMessage.style.display = 'none';
+
+            try {
+                console.log('📤 Sending to server...');
+                
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, project, message })
+                });
+
+                console.log('📥 Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('📦 Response data:', data);
+
+                if(data.success) {
+                    console.log('✅ Message sent successfully!');
+                    successMessage.style.display = 'block';
+                    contactForm.reset();
+                    
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 5000);
+                } else {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showFormError('Sorry, there was an error sending your message. Please try again.');
+            } finally {
+                submitBtn.textContent = 'Send request';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showFormError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+    }
+
+    console.log('🚀 Contact form script loaded');
+})();
+</script>
+
+<script>
+// ==================== ДИНАМИЧЕСКАЯ ЗАГРУЗКА КОНТЕНТА ====================
+
+// Загрузка динамического контента
+async function loadSiteContent() {
+  try {
+    const response = await fetch('/api/public/content');
+    const content = await response.json();
+    
+    // Обновляем контент на странице
+    updateSiteContent(content);
+  } catch (error) {
+    console.error('Ошибка загрузки контента:', error);
+  }
+}
+
+function updateSiteContent(content) {
+  // Hero section
+  if (content.hero_title) {
+    const heroTitle = document.querySelector('.hero-title');
+    if (heroTitle) heroTitle.textContent = content.hero_title;
+  }
+  
+  if (content.hero_subtitle) {
+    const heroSub = document.querySelector('.hero-sub');
+    if (heroSub) heroSub.textContent = content.hero_subtitle;
+  }
+
+  // Services section
+  if (Array.isArray(content.services)) {
+    updateServices(content.services);
+  }
+
+  // Portfolio section
+  if (Array.isArray(content.portfolio)) {
+    updatePortfolio(content.portfolio);
+  }
+
+  // Contact section
+  if (content.contact_info && typeof content.contact_info === 'object') {
+    updateContactInfo(content.contact_info);
+  }
+}
+
+function updateServices(services) {
+  const servicesGrid = document.querySelector('.services-grid');
+  if (!servicesGrid) return;
+
+  let servicesHTML = '';
+  services.forEach(service => {
+    servicesHTML += `
+      <div class="service reveal">
+        <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
+        <h4>${service.title || 'Услуга'}</h4>
+        <p>${service.description || 'Описание услуги'}</p>
+      </div>
+    `;
+  });
+  
+  servicesGrid.innerHTML = servicesHTML;
+  
+  // Переинициализируем анимации для новых элементов
+  initAnimations();
+}
+  
+  servicesGrid.innerHTML = servicesHTML;
+}
+
+function updatePortfolio(portfolio) {
+  const portfolioGrid = document.querySelector('.portfolio-grid');
+  if (!portfolioGrid) return;
+
+  let portfolioHTML = '';
+  portfolio.forEach(item => {
+    portfolioHTML += `
+      <article class="project reveal" aria-label="${item.title || 'Проект'}">
+        <div class="meta">${item.title || 'Название проекта'}</div>
+        <p>${item.description || 'Описание проекта'}</p>
+      </article>
+    `;
+  });
+  
+  portfolioGrid.innerHTML = portfolioHTML;
+  
+  // Переинициализируем анимации для новых элементов
+  initAnimations();
+}
+  
+  portfolioGrid.innerHTML = portfolioHTML;
+}
+
+function updateContactInfo(contact) {
+  // Email
+  const emailLink = document.querySelector('a[href^="mailto:"]');
+  if (emailLink && contact.email) {
+    emailLink.href = `mailto:${contact.email}`;
+    emailLink.textContent = contact.email;
+  }
+
+function initAnimations() {
+  // Повторно инициализируем анимации появления
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        en.target.classList.add('visible');
+        obs.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  
+  document.querySelectorAll('.reveal').forEach(el => {
+    if (!el.classList.contains('visible')) {
+      observer.observe(el);
+    }
+  });
+}
+
+  // Phone
+  const phoneElement = document.querySelector('p:has(.fa-phone) span');
+  if (phoneElement && contact.phone) {
+    phoneElement.textContent = contact.phone;
+  }
+
+  // Address
+  const addressElement = document.querySelector('p:has(.fa-map-marker-alt) span');
+  if (addressElement && contact.address) {
+    addressElement.textContent = contact.address;
+  }
+}
+
+// Загружаем контент при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+  loadSiteContent();
+});
+
+// ==================== КОНЕЦ ДИНАМИЧЕСКОЙ ЗАГРУЗКИ ====================
+</script>
+
+</body>
+</html>
