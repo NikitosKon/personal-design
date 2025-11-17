@@ -26,24 +26,42 @@ const db = new sqlite3.Database('./database.db');
 
 // Создание таблиц
 db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    project_type TEXT NOT NULL,
-    message TEXT,
-    status TEXT DEFAULT 'new',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS messages (...)`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS site_content (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  section TEXT UNIQUE NOT NULL,
-  title TEXT,
-  content TEXT,
-  image_url TEXT,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)`);
+  db.run(`CREATE TABLE IF NOT EXISTS admins (...)`);
+
+  // Код создания администраторов должен быть ЗДЕСЬ
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const admin2Password = process.env.ADMIN2_PASSWORD;
+
+  if (!adminPassword) {
+    console.error('❌ ADMIN_PASSWORD не установлен');
+    process.exit(1);
+  }
+
+  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+  const hashedPassword2 = bcrypt.hashSync(admin2Password || 'admin456', 10);
+
+  // Первый администратор
+  db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, 
+    ['admin', hashedPassword], function(err) {
+      if (err) {
+        console.error('❌ Ошибка создания админа:', err);
+      } else {
+        console.log('✅ Админ admin настроен');
+      }
+    });
+
+  // Второй администратор  
+  db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, 
+    ['admin2', hashedPassword2], function(err) {
+      if (err) {
+        console.error('❌ Ошибка создания второго админа:', err);
+      } else {
+        console.log('✅ Админ admin2 настроен');
+      }
+    });
+}); // ← ЗАКРЫВАЕМ db.serialize ЗДЕСЬ
 
   // Создание администраторов
 const adminPassword = process.env.ADMIN_PASSWORD;
