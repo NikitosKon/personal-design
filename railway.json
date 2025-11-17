@@ -1,6 +1,6 @@
-{
+﻿{
   "build": {
-    "builder": "nixpacks",
+    "builder": "nixpacks", 
     "buildCommand": "cd server && npm install"
   },
   "deploy": {
