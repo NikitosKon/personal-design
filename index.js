@@ -25,14 +25,42 @@ app.use('/admin', express.static(join(__dirname, './admin'))); // Админ-п�
 const db = new sqlite3.Database('./database.db');
 
 // Создание таблиц
+// Создание таблиц
 db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS messages (...)`);
+  console.log('🔄 Создаем таблицу messages...');
+  db.run(`CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    project_type TEXT NOT NULL,
+    message TEXT,
+    status TEXT DEFAULT 'new',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`, function(err) {
+    if (err) {
+      console.error('❌ Ошибка создания messages:', err.message);
+    } else {
+      console.log('✅ Таблица messages создана');
+    }
+  });
 
-  db.run(`CREATE TABLE IF NOT EXISTS admins (...)`);
+  console.log('🔄 Создаем таблицу admins...');
+  db.run(`CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+  )`, function(err) {
+    if (err) {
+      console.error('❌ Ошибка создания admins:', err.message);
+    } else {
+      console.log('✅ Таблица admins создана');
+    }
+  });
 
-  // Код создания администраторов ВНУТРИ db.serialize
+  // Остальной код создания администраторов...
   const adminPassword = process.env.ADMIN_PASSWORD;
   const admin2Password = process.env.ADMIN2_PASSWORD;
+  // ... и т.д.
 
   if (!adminPassword) {
     console.error('❌ ADMIN_PASSWORD не установлен');
