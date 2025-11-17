@@ -4,7 +4,7 @@
 database.db
 
 # Admin panel
-admin/
+
 
 # Node modules
 node_modules/

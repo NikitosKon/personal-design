@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Логи - Personal Design</title>
+    <style>
+        :root {
+            --bg-dark: #0f0f10;
+            --bg-darker: #050506;
+            --text: #e9e9ee;
+            --muted: rgba(233,233,238,0.68);
+            --accent: #00d7a8;
+            --accent2: #4db4ff;
+            --border: rgba(255,255,255,0.1);
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-darker); color: var(--text); line-height: 1.6; }
+
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .admin-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 30px;
+        }
+
+        .admin-title { font-size: 24px; font-weight: 700; color: var(--accent); }
+
+        .nav-btn {
+            background: transparent; border: 1px solid var(--border); color: var(--text);
+            padding: 10px 20px; border-radius: var(--radius); cursor: pointer; margin-right: 10px;
+        }
+
+        .log-section {
+            background: var(--bg-dark); border-radius: var(--radius); border: 1px solid var(--border);
+            padding: 20px; margin-bottom: 20px;
+        }
+
+        .log-item {
+            padding: 10px; border-bottom: 1px solid var(--border); font-family: monospace;
+        }
+
+        .log-info { color: var(--accent2); }
+        .log-error { color: #ef4444; }
+        .log-success { color: var(--accent); }
+
+        .refresh-btn {
+            background: var(--accent); color: var(--bg-darker); border: none;
+            padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">Системные логи</h1>
+            <div>
+                <button class="nav-btn" onclick="location.href='/admin/'">Сообщения</button>
+                <button class="nav-btn" onclick="location.href='/admin/content.html'">Контент</button>
+                <button class="nav-btn" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="loadLogs()">Обновить логи</button>
+
+        <div class="log-section">
+            <h3>Системная информация</h3>
+            <div id="systemInfo"></div>
+        </div>
+
+        <div class="log-section">
+            <h3>Последние сообщения от клиентов (100)</h3>
+            <div id="messagesLogs"></div>
+        </div>
+
+        <div class="log-section">
+            <h3>Системные логи</h3>
+            <div id="systemLogs"></div>
+        </div>
+    </div>
+
+    <script>
+        const currentToken = localStorage.getItem('adminToken');
+        
+        if (!currentToken) {
+            window.location.href = '/admin/login.html';
+        }
+
+        function loadLogs() {
+            fetch('/api/admin/logs', {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Системная информация
+                document.getElementById('systemInfo').innerHTML = `
+                    <div class="log-item">Время сервера: ${new Date(data.serverInfo.timestamp).toLocaleString()}</div>
+                    <div class="log-item">Аптайм: ${Math.floor(data.serverInfo.uptime)} секунд</div>
+                    <div class="log-item">Память: ${Math.round(data.serverInfo.memory.heapUsed / 1024 / 1024)}MB</div>
+                `;
+
+                // Сообщения
+                let messagesHTML = '';
+                data.messages.forEach(msg => {
+                    messagesHTML += `
+                        <div class="log-item">
+                            <span class="log-success">[${new Date(msg.created_at).toLocaleString()}]</span>
+                            ${msg.name} (${msg.email}) - ${msg.project_type}
+                            <span class="log-info">[${msg.status}]</span>
+                        </div>
+                    `;
+                });
+                document.getElementById('messagesLogs').innerHTML = messagesHTML;
+
+                // Системные логи
+                let systemHTML = '';
+                data.system.forEach(log => {
+                    systemHTML += `
+                        <div class="log-item log-${log.type}">
+                            [${new Date(log.timestamp).toLocaleString()}] ${log.message}
+                        </div>
+                    `;
+                });
+                document.getElementById('systemLogs').innerHTML = systemHTML;
+            })
+            .catch(error => {
+                console.error('Error loading logs:', error);
+                alert('Ошибка загрузки логов');
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        }
+
+        // Загружаем логи при открытии страницы
+        loadLogs();
+    </script>
+</body>
+</html>

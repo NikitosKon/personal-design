@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление контентом - Personal Design</title>
+    <style>
+        :root {
+            --bg-dark: #0f0f10;
+            --bg-darker: #050506;
+            --text: #e9e9ee;
+            --muted: rgba(233,233,238,0.68);
+            --accent: #00d7a8;
+            --accent2: #4db4ff;
+            --border: rgba(255,255,255,0.1);
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-darker);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .admin-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn.active {
+            background: var(--accent);
+            color: var(--bg-darker);
+            border-color: var(--accent);
+        }
+
+        .content-section {
+            background: var(--bg-dark);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .save-btn {
+            background: var(--accent);
+            color: var(--bg-darker);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background: #00c197;
+        }
+
+        .item-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .add-btn {
+            background: var(--accent2);
+            color: var(--bg-darker);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            background: var(--accent);
+            color: var(--bg-darker);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message {
+            background: #ef4444;
+            color: white;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+    <h1 class="admin-title">Админ-панель Personal Design</h1>
+    <div>
+        <button class="nav-btn" onclick="location.href='/admin/'">Сообщения</button>
+        <button class="nav-btn active">Контент</button>
+        <button class="nav-btn" onclick="location.href='/admin/logs.html'">Логи</button>
+        <button class="nav-btn" onclick="logout()">Выйти</button>
+    </div>
+</div>
+
+        <div class="admin-nav">
+<button class="nav-btn active" onclick="showSection('hero', this)">Главная</button>
+<button class="nav-btn" onclick="showSection('services', this)">Услуги</button>
+<button class="nav-btn" onclick="showSection('portfolio', this)">Портфолио</button>
+<button class="nav-btn" onclick="showSection('contact', this)">Контакты</button>
+        </div>
+
+        <div id="successMessage" class="success-message"></div>
+        <div id="errorMessage" class="error-message"></div>
+
+        <!-- Hero Section -->
+        <div id="hero-section" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Главная секция</h2>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Заголовок героя</label>
+                <input type="text" id="hero-title" class="form-input" placeholder="We craft premium logos...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Подзаголовок героя</label>
+                <textarea id="hero-subtitle" class="form-textarea" placeholder="Fast delivery, polished aesthetics..."></textarea>
+            </div>
+
+            <button class="save-btn" onclick="saveContent('hero')">Сохранить главную</button>
+        </div>
+
+        <!-- Services Section -->
+        <div id="services-section" class="content-section" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Услуги</h2>
+                <button class="add-btn" onclick="addService()">+ Добавить услугу</button>
+            </div>
+            
+            <div id="services-list">
+                <!-- Services will be loaded here -->
+            </div>
+
+            <button class="save-btn" onclick="saveContent('services')">Сохранить услуги</button>
+        </div>
+
+        <!-- Portfolio Section -->
+        <div id="portfolio-section" class="content-section" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Портфолио</h2>
+                <button class="add-btn" onclick="addPortfolioItem()">+ Добавить работу</button>
+            </div>
+            
+            <div id="portfolio-list">
+                <!-- Portfolio items will be loaded here -->
+            </div>
+
+            <button class="save-btn" onclick="saveContent('portfolio')">Сохранить портфолио</button>
+        </div>
+
+        <!-- Contact Section -->
+        <div id="contact-section" class="content-section" style="display: none;">
+            <div class="section-header">
+                <h2 class="section-title">Контактная информация</h2>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="contact-email" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Телефон</label>
+                <input type="text" id="contact-phone" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Адрес</label>
+                <input type="text" id="contact-address" class="form-input">
+            </div>
+
+            <button class="save-btn" onclick="saveContent('contact')">Сохранить контакты</button>
+        </div>
+    </div>
+
+    <script src="content.js"></script>
+</body>
+</html>
