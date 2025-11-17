@@ -26,7 +26,6 @@ const db = new sqlite3.Database('./database.db');
 
 // Создание таблиц
 db.serialize(() => {
-  // Таблица для сообщений из формы
   db.run(`CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -37,28 +36,30 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Таблица для администраторов
   db.run(`CREATE TABLE IF NOT EXISTS admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   )`);
 
-  // Создаем/обновляем администратора
-const newPassword = 'K30052008k$'; // ЗАМЕНИ НА СВОЙ ПАРОЛЬ
-const hashedPassword = bcrypt.hashSync(newPassword, 10);
+  // Создание админа
+  const adminPassword = process.env.ADMIN_PASSWORD;
 
-db.run(`INSERT OR REPLACE INTO admins (username, password) VALUES (?, ?)`, 
-  ['admin', hashedPassword], function(err) {
-    if (err) {
-      console.error('❌ Ошибка создания админа:', err);
-    } else {
-      console.log('✅ Админ создан/обновлен!');
-      console.log('👤 Логин: admin');
-      console.log('🔑 Пароль: ' + newPassword);
-    }
-  });
-});
+if (!adminPassword) {
+  console.error('❌ ADMIN_PASSWORD не установлен в .env файле');
+  process.exit(1); // Останавливаем сервер если нет пароля
+}
+  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+
+  db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, 
+    ['admin', hashedPassword], function(err) {
+      if (err) {
+        console.error('❌ Ошибка создания админа:', err);
+      } else {
+        console.log('✅ Админ настроен');
+      }
+    });
+}); // ✅ ЗАКРЫВАЕМ db.serialize
 
 // Middleware для проверки JWT токена
 const authenticateToken = (req, res, next) => {
@@ -69,15 +70,14 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Токен доступа отсутствует' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => { // ✅ УБРАЛ запасной секрет
     if (err) {
       return res.status(403).json({ error: 'Неверный токен' });
     }
     req.user = user;
     next();
   });
-};
-
+}; // ✅ ЗАКРЫВАЕМ authenticateToken
 // API Routes
 
 // Отправка сообщения из формы
@@ -155,7 +155,7 @@ app.post('/api/admin/login', (req, res) => {
     if (bcrypt.compareSync(password, admin.password)) {
       const token = jwt.sign(
         { id: admin.id, username: admin.username },
-        process.env.JWT_SECRET || 'your-secret-key',
+        process.env.JWT_SECRET, // ✅ УБРАЛ '|| 'your-secret-key''
         { expiresIn: '24h' }
       );
       res.json({ success: true, token });
@@ -308,5 +308,4 @@ app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
   console.log(`Основной сайт: http://localhost:${PORT}`);
   console.log(`Админ-панель: http://localhost:${PORT}/admin`);
-  console.log(`Данные для входа в админку: admin / admin123`);
 });
