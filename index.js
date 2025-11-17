@@ -36,11 +36,14 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS site_content (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  section TEXT UNIQUE NOT NULL,
+  title TEXT,
+  content TEXT,
+  image_url TEXT,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
 
   // Создание администраторов
 const adminPassword = process.env.ADMIN_PASSWORD;
