@@ -18,8 +18,8 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(join(__dirname, '../public'))); // Твой основной сайт
-app.use('/admin', express.static(join(__dirname, '../admin'))); // Админ-панель
+app.use(express.static(join(__dirname, './public'))); // Твой основной сайт
+app.use('/admin', express.static(join(__dirname, './admin'))); // Админ-панель
 
 // Инициализация базы данных
 const db = new sqlite3.Database('./database.db');
