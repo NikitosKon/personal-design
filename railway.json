@@ -1,4 +1,4 @@
-﻿{
+{
   "build": {
     "builder": "nixpacks",
     "buildCommand": "cd server && npm install"
