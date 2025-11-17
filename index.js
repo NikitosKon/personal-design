@@ -50,7 +50,7 @@ const adminPassword = process.env.ADMIN_PASSWORD;
 const admin2Password = process.env.ADMIN2_PASSWORD;
 
 if (!adminPassword) {
-  console.error('❌ ADMIN_PASSWORD не установлен в .env файле');
+  console.error('❌ ADMIN_PASSWORD не установлен');
   process.exit(1);
 }
 
