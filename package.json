@@ -1,8 +1,9 @@
-﻿{
+{
   "name": "personal-design-site",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "scripts": {
+    "dev": "cd server && npm run dev",
     "start": "cd server && npm start",
-    "build": "cd server && npm install"
+    "build": "echo \"No build process needed\""
   }
 }
