@@ -4,10 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Personal Design — Premium Design Studio</title>
-  <meta name="description" content="Personal Design — premium logos, posters, social content, promo videos & 3D visuals. Free sample for first project." />
+  <meta name="description" content="Personal Design — premium logos, posters, social content, promo videos & 3D visuals. Order now via social media." />
   <meta name="theme-color" content="#050506" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
   /* ==========================
@@ -168,18 +168,18 @@
   .nav-inner{
     width:calc(100% - 32px);
     max-width:var(--maxw);
-    background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(0,0,0,0.02));
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.1));
     border-radius:12px;
     padding:10px 14px;
     display:flex;align-items:center;justify-content:space-between;
     gap:14px;
     box-shadow:var(--card-shadow);
     border:1px solid var(--border);
-    backdrop-filter: blur(6px) saturate(120%);
+    backdrop-filter: blur(12px) saturate(180%);
     pointer-events:auto;
     transition: background var(--transition), transform var(--transition);
   }
-  .nav-inner.scrolled{ transform: translateY(-4px); background: linear-gradient(180deg, rgba(255,255,255,0.022), rgba(0,0,0,0.04)); }
+  .nav-inner.scrolled{ transform: translateY(-4px); background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(0,0,0,0.12)); }
 
   .brand{display:flex;gap:12px;align-items:center}
   .logo{
@@ -209,8 +209,46 @@
     box-shadow: 0 10px 30px rgba(0, 215, 168, 0.15);
   }
 
-  .menu-toggle{display:none;background:transparent;border:0;color:var(--text);font-size:20px;cursor:pointer}
-  @media (max-width:900px){ nav ul{display:none} .menu-toggle{display:block} }
+  .menu-toggle{display:none;background:transparent;border:0;color:var(--text);font-size:20px;cursor:pointer;z-index:100}
+  
+  /* Mobile Menu Styles */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 86px;
+    right: 20px;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0.15));
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.8);
+    z-index: 99;
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border);
+    min-width: 180px;
+  }
+  
+  .mobile-menu.active {
+    display: flex;
+  }
+  
+  .mobile-menu .nav-link {
+    padding: 12px 16px;
+    margin: 4px 0;
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  
+  .mobile-menu .nav-link:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width:900px){ 
+    nav ul{display:none} 
+    .menu-toggle{display:block} 
+  }
 
   /* ==========================
      HERO
@@ -316,6 +354,56 @@
     pointer-events: none;
   }
 
+  /* Social Order Section */
+  .social-order {
+    text-align: center;
+    padding: 40px 0;
+  }
+  
+  .social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  
+  .social-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: var(--transition);
+    border: 1px solid var(--border);
+    background: var(--glass);
+    color: var(--text);
+  }
+  
+  .social-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+  }
+  
+  .social-btn.telegram {
+    background: linear-gradient(135deg, #0088cc, #00a8e8);
+    color: white;
+    border: none;
+  }
+  
+  .social-btn.instagram {
+    background: linear-gradient(135deg, #833AB4, #C13584, #E1306C, #FD1D1D);
+    color: white;
+    border: none;
+  }
+  
+  .social-btn.facebook {
+    background: linear-gradient(135deg, #1877F2, #3b5998);
+    color: white;
+    border: none;
+  }
+
   @media (max-width:1100px){
     .features{grid-template-columns:repeat(2,1fr)}
     .portfolio-grid{grid-template-columns:repeat(2,1fr)}
@@ -329,6 +417,19 @@
     .hero-title{font-size:30px}
     .features, .services-grid, .portfolio-grid{grid-template-columns:1fr}
     .brand .logo{width:46px;height:46px;font-size:18px}
+    .social-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+    .social-btn {
+      width: 100%;
+      max-width: 280px;
+      justify-content: center;
+    }
+    .mobile-menu {
+      top: 74px;
+      right: 16px;
+    }
   }
   @media (prefers-reduced-motion: reduce){
     *{transition:none!important;animation:none!important}
@@ -338,10 +439,10 @@
 </head>
 <body>
 
-    <canvas id="gradient-canvas"></canvas>
-    <div class="grain-overlay"></div>
+  <canvas id="gradient-canvas"></canvas>
+  <div class="grain-overlay"></div>
 
-    <header class="nav" role="banner">
+  <header class="nav" role="banner">
     <div class="nav-inner container" role="navigation" aria-label="Main navigation" id="navInner">
       <div class="brand" aria-hidden="false">
         <div class="logo">PD</div>
@@ -356,19 +457,29 @@
           <li><a class="nav-link" href="#about">About</a></li>
           <li><a class="nav-link" href="#portfolio">Portfolio</a></li>
           <li><a class="nav-link" href="#services">Services</a></li>
+          <li><a class="nav-link" href="#order">Order Now</a></li>
           <li><a class="nav-link" href="#contact">Contact</a></li>
         </ul>
       </nav>
 
       <div style="display:flex;align-items:center;gap:12px">
-        <a class="nav-cta" href="#contact">Get in touch</a>
-        <button class="menu-toggle" aria-label="Open menu" title="Open menu" onclick="toggleMenu()">☰</button>
+        <a class="nav-cta" href="#order">Order Now</a>
+        <button class="menu-toggle" aria-label="Open menu" title="Open menu" id="menuToggle">☰</button>
       </div>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+      <a class="nav-link" href="#about" onclick="closeMobileMenu()">About</a>
+      <a class="nav-link" href="#portfolio" onclick="closeMobileMenu()">Portfolio</a>
+      <a class="nav-link" href="#services" onclick="closeMobileMenu()">Services</a>
+      <a class="nav-link" href="#order" onclick="closeMobileMenu()">Order Now</a>
+      <a class="nav-link" href="#contact" onclick="closeMobileMenu()">Contact</a>
     </div>
   </header>
 
   <main>
-        <section class="hero" aria-labelledby="hero-heading">
+    <section class="hero" aria-labelledby="hero-heading">
       <!-- GRID SYSTEM -->
       <div class="hero-grid-container">
         <div class="hero-grid"></div>
@@ -380,11 +491,11 @@
       <div class="hero-inner container reveal">
         <div class="eyebrow">Premium Design & Motion</div>
         <h1 id="hero-heading" class="hero-title">We craft premium logos, posters, social content, promo videos & 3D visuals.</h1>
-      <p class="hero-sub">Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.</p>
+        <p class="hero-sub">Fast delivery, polished aesthetics, and conversion-driven visuals. Order directly through your preferred social platform.</p>
 
         <div class="hero-cta">
-          <a class="btn" href="#portfolio">View Our Work</a>
-          <a class="btn" href="#contact" style="background:transparent;border:1px solid var(--border);color:var(--muted)">Get Free Sample</a>
+          <a class="btn" href="#order">Order Now</a>
+          <a class="btn" href="#portfolio" style="background:transparent;border:1px solid var(--border);color:var(--muted)">View Our Work</a>
         </div>
 
         <div class="badges" aria-hidden="true">
@@ -398,7 +509,36 @@
       </div>
     </section>
 
-        <section id="about" class="container reveal" aria-labelledby="about-title">
+    <!-- НОВАЯ СЕКЦИЯ: ЗАКАЗ ЧЕРЕЗ СОЦСЕТИ -->
+    <section id="order" class="container reveal" aria-labelledby="order-title">
+      <div class="section-title">
+        <h2 id="order-title">Order Now</h2>
+        <p>Choose your preferred platform to discuss your project and place an order</p>
+      </div>
+      
+      <div class="social-order">
+        <div class="social-buttons">
+          <a href="https://t.me/personaldsgn" class="social-btn telegram" target="_blank" rel="noopener">
+            <i class="fab fa-telegram"></i>
+            Order via Telegram
+          </a>
+          <a href="https://instagram.com/personaldesigneurope" class="social-btn instagram" target="_blank" rel="noopener">
+            <i class="fab fa-instagram"></i>
+            Order via Instagram
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61583750853548" class="social-btn facebook" target="_blank" rel="noopener">
+            <i class="fab fa-facebook-f"></i>
+            Order via Facebook
+          </a>
+        </div>
+        
+        <p style="color:var(--muted); margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+          We respond within 1-2 hours during business hours. Simply send us a message with your project details!
+        </p>
+      </div>
+    </section>
+
+    <section id="about" class="container reveal" aria-labelledby="about-title">
       <div class="section-title">
         <h2 id="about-title">Who we are</h2>
         <p>We help businesses stand out with premium design, quick turnaround and thoughtful visuals optimized for attention and conversion.</p>
@@ -423,7 +563,7 @@
       </div>
     </section>
 
-        <section id="portfolio" class="container reveal" aria-labelledby="portfolio-title">
+    <section id="portfolio" class="container reveal" aria-labelledby="portfolio-title">
       <div class="section-title">
         <h2 id="portfolio-title">Selected Work</h2>
         <p>Hand-picked projects — identity, visuals and motion that drove results.</p>
@@ -447,11 +587,11 @@
       </div>
 
       <div style="text-align:center;margin-top:18px">
-        <a class="btn" href="#" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</a>
+        <a class="btn" href="#order" style="background:transparent;border:1px solid var(--border);color:var(--muted)">Order similar project</a>
       </div>
     </section>
 
-        <section id="services" class="container reveal" aria-labelledby="services-title">
+    <section id="services" class="container reveal" aria-labelledby="services-title">
       <div class="section-title">
         <h2 id="services-title">Services</h2>
         <p>Full-service creative production from quick assets to brand systems.</p>
@@ -459,80 +599,61 @@
 
       <div class="services-grid">
         <div class="service reveal">
-            <div class="icon"><i class="fas fa-pen-nib"></i></div>
+          <div class="icon"><i class="fas fa-pen-nib"></i></div>
           <h4>Logo & Branding</h4>
           <p>Logo, typography, color and asset systems.</p>
         </div>
 
         <div class="service reveal">
-            <div class="icon"><i class="fas fa-image"></i></div>
+          <div class="icon"><i class="fas fa-image"></i></div>
           <h4>Graphic Design</h4>
           <p>Posters, banners, social content and ad creatives.</p>
         </div>
 
         <div class="service reveal">
           <div class="icon"><i class="fas fa-film"></i></div>
-            <h4>Video Editing</h4>
+          <h4>Video Editing</h4>
           <p>Short-form ads, promos and product videos for socials.</p>
         </div>
 
         <div class="service reveal">
-            <div class="icon"><i class="fas fa-cube"></i></div>
+          <div class="icon"><i class="fas fa-cube"></i></div>
           <h4>3D Visualization</h4>
           <p>Product renders, mockups and animated presentations.</p>
         </div>
       </div>
 
       <div style="text-align:center;margin-top:22px">
-        <a class="btn" href="#contact">Request a free sample</a>
+        <a class="btn" href="#order">Order now</a>
       </div>
     </section>
 
-        <section id="contact" class="container reveal" aria-labelledby="contact-title">
+    <section id="contact" class="container reveal" aria-labelledby="contact-title">
       <div class="section-title">
         <h2 id="contact-title">Get in touch</h2>
-        <p>Ready to elevate your visual presence? Send a short brief or request a free sample.</p>
+        <p>Have questions? Reach out to us through any of our social channels.</p>
       </div>
 
       <div class="contact-grid">
-        <form id="contactForm" class="panel reveal" aria-label="Contact form">
-          <div id="successMessage" class="success-message" style="display:none;">
-            Thank you! Your message has been sent. We'll get back to you within 24 hours.
-          </div>
-          <div id="errorMessage" class="error-message" style="display:none;"></div>
+        <div class="panel reveal" aria-label="Contact options">
+          <h3>Quick Contact</h3>
+          <p style="color:var(--muted); margin-bottom: 20px;">Prefer direct messaging? We're available on all major platforms.</p>
           
-          <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-              <div style="flex:1;min-width:160px">
-              <label for="name">Name</label>
-              <input id="name" name="name" class="form-control" required placeholder="Your name">
-            </div>
-            <div style="flex:1;min-width:160px">
-              <label for="email">Email</label>
-              <input id="email" name="email" type="email" class="form-control" required placeholder="you@example.com">
-            </div>
+          <div class="social-buttons" style="justify-content: flex-start;">
+            <a href="https://t.me/personaldsgn" class="social-btn telegram" target="_blank" rel="noopener" style="margin-bottom: 10px;">
+              <i class="fab fa-telegram"></i>
+              Telegram
+            </a>
+            <a href="https://instagram.com/personaldesigneurope" class="social-btn instagram" target="_blank" rel="noopener" style="margin-bottom: 10px;">
+              <i class="fab fa-instagram"></i>
+              Instagram
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61583750853548" class="social-btn facebook" target="_blank" rel="noopener" style="margin-bottom: 10px;">
+              <i class="fab fa-facebook-f"></i>
+              Facebook
+            </a>
           </div>
-
-          <div style="margin-bottom:12px">
-            <label for="project">Project type</label>
-            <select id="project" name="project" class="form-control" required>
-                <option value="">Select</option>
-                <option value="logo">Logo</option>
-                <option value="video">Video</option>
-                <option value="3d">3D</option>
-                <option value="other">Other</option>
-              </select>
-          </div>
-
-          <div style="margin-bottom:14px">
-            <label for="message">Brief</label>
-              <textarea id="message" name="message" class="form-control" placeholder="Describe your project or request a sample" rows="4"></textarea>
-          </div>
-
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-              <button type="submit" class="btn" id="submitBtn">Send request</button>
-            <div style="color:var(--muted);font-size:13px">We typically reply within 24 hours.</div>
-          </div>
-        </form>
+        </div>
 
         <aside class="panel reveal" aria-labelledby="contact-panel">
           <h3 id="contact-panel">Contact Information</h3>
@@ -546,11 +667,11 @@
 
           <div style="margin-top:16px">
             <div style="color:var(--muted)">Follow</div>
-              <div style="display:flex;gap:10px;margin-top:10px">
-              <a href="#" aria-label="Instagram" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-linkedin-in"></i></a>
-                <a href="#" aria-label="Behance" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-behance"></i></a>
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <a href="https://instagram.com/personaldesigneurope" aria-label="Instagram" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-instagram"></i></a>
+              <a href="https://www.facebook.com/profile.php?id=61583750853548" aria-label="Facebook" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-facebook-f"></i></a>
+              <a href="https://linkedin.com/company/personal-design" aria-label="LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-linkedin-in"></i></a>
+              <a href="https://behance.net/personaldsgn" aria-label="Behance" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:transparent"><i class="fab fa-behance"></i></a>
             </div>
           </div>
         </aside>
@@ -558,7 +679,7 @@
     </section>
   </main>
 
-    <footer>
+  <footer>
     <div class="container">
       <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap">
         <div style="max-width:540px">
@@ -569,23 +690,23 @@
         <div style="display:flex;gap:40px">
           <div>
             <div style="font-weight:700;margin-bottom:8px">Quick links</div>
-              <nav style="display:flex;flex-direction:column;gap:8px;color:var(--muted)">
+            <nav style="display:flex;flex-direction:column;gap:8px;color:var(--muted)">
               <a href="#about">About</a>
-                <a href="#portfolio">Portfolio</a>
-                <a href="#services">Services</a>
-                  <a href="#contact">Contact</a>
+              <a href="#portfolio">Portfolio</a>
+              <a href="#services">Services</a>
+              <a href="#order">Order Now</a>
             </nav>
           </div>
 
           <div>
-              <div style="font-weight:700;margin-bottom:8px">Services</div>
+            <div style="font-weight:700;margin-bottom:8px">Services</div>
             <nav style="display:flex;flex-direction:column;gap:8px;color:var(--muted)">
-                <a href="#">Logo & Branding</a>
-                <a href="#">Graphic Design</a>
-                <a href="#">Video Editing</a>
-                <a href="#">3D Visualization</a>
+              <a href="#services">Logo & Branding</a>
+              <a href="#services">Graphic Design</a>
+              <a href="#services">Video Editing</a>
+              <a href="#services">3D Visualization</a>
             </nav>
-            </div>
+          </div>
         </div>
       </div>
 
@@ -597,7 +718,34 @@
   // Basic functionality
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  // Smooth scroll
+  // Mobile Menu Functionality
+  const mobileMenu = document.getElementById('mobileMenu');
+  const menuToggle = document.getElementById('menuToggle');
+  
+  function toggleMobileMenu() {
+    mobileMenu.classList.toggle('active');
+  }
+  
+  function closeMobileMenu() {
+    mobileMenu.classList.remove('active');
+  }
+  
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', function(event) {
+    const isClickInsideMenu = mobileMenu.contains(event.target);
+    const isClickOnToggle = menuToggle.contains(event.target);
+    
+    if (!isClickInsideMenu && !isClickOnToggle && mobileMenu.classList.contains('active')) {
+      closeMobileMenu();
+    }
+  });
+  
+  menuToggle.addEventListener('click', function(event) {
+    event.stopPropagation();
+    toggleMobileMenu();
+  });
+
+  // Smooth scroll - FIXED VERSION
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', function(e){
       const href = this.getAttribute('href');
@@ -605,77 +753,61 @@
       e.preventDefault();
       const el = document.querySelector(href);
       if(!el) return;
-      const offset = window.pageYOffset + el.getBoundingClientRect().top - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72) - 12;
-      window.scrollTo({ top: offset, behavior: 'smooth' });
+      
+      // Close mobile menu when clicking on navigation links
+      closeMobileMenu();
+      
+      // Calculate offset properly
+      const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72;
+      const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - navHeight - 12;
+      
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     });
   });
 
-  // Mobile menu
-  let mobileMenuOpen = false;
-  function toggleMenu(){
-    mobileMenuOpen = !mobileMenuOpen;
-    const ul = document.querySelector('nav ul');
-    if(!ul) return;
-    if(mobileMenuOpen){
-      ul.style.display = 'flex';
-      ul.style.position = 'fixed';
-      ul.style.top = '86px';
-      ul.style.right = '20px';
-      ul.style.flexDirection = 'column';
-      ul.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03))';
-      ul.style.padding = '12px';
-      ul.style.borderRadius = '12px';
-      ul.style.boxShadow = '0 18px 50px rgba(0,0,0,0.6)';
-    } else {
-      ul.style.display = '';
-      ul.style.position = '';
-      ul.style.top = '';
-      ul.style.right = '';
-      ul.style.flexDirection = '';
-      ul.style.background = '';
-      ul.style.padding = '';
-      ul.style.borderRadius = '';
-      ul.style.boxShadow = '';
-    }
-  }
-  window.toggleMenu = toggleMenu;
-
-  // Reveal animations
+  // Reveal animations - FIXED VERSION
   const observer = new IntersectionObserver((entries, obs) => {
-    entries.forEach(en=>{
+    entries.forEach(en => {
       if(en.isIntersecting){
         en.target.classList.add('visible');
-        obs.unobserve(en.target);
       }
     });
-  }, {threshold: 0.12});
-  document.querySelectorAll('.reveal').forEach(el=>{
+  }, { threshold: 0.12 });
+  
+  document.querySelectorAll('.reveal').forEach(el => {
     observer.observe(el);
   });
 
   // Nav scroll effect
   const navInner = document.getElementById('navInner');
-  window.addEventListener('scroll', ()=>{
-    if(window.scrollY > 40) navInner.classList.add('scrolled');
-    else navInner.classList.remove('scrolled');
-  });
+  if (navInner) {
+    window.addEventListener('scroll', () => {
+      if(window.scrollY > 40) {
+        navInner.classList.add('scrolled');
+      } else {
+        navInner.classList.remove('scrolled');
+      }
+    });
+  }
 
   // Reduced motion
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    document.querySelectorAll('.reveal').forEach(el=>{
+    document.querySelectorAll('.reveal').forEach(el => {
       el.classList.add('visible');
       el.style.transition = 'none';
     });
   }
-</script>
-<script>
-// STAR ANIMATION SYSTEM
+  </script>
+
+  <script>
+  // STAR ANIMATION SYSTEM
   const starsContainer = document.getElementById('stars-container');
   
   // Настройки для 5 звезд одновременно
   const starSettings = {
     starsPerLaunch: 1,
-    launchInterval: 2000, // ИЗМЕНИЛ: 2000мс = 2 секунды
+    launchInterval: 2000,
     maxConcurrent: 5,
     currentCount: 0
   };
@@ -708,7 +840,10 @@
     star.style.borderRadius = '50%';
     star.style.opacity = '0';
     star.style.filter = 'blur(0.5px)';
-    starsContainer.appendChild(star);
+    
+    if (starsContainer) {
+      starsContainer.appendChild(star);
+    }
     
     return star;
   }
@@ -718,6 +853,8 @@
   }
   
   function launchStar() {
+    if (!starsContainer) return;
+    
     const starLines = calculateStarLines();
     
     if (starSettings.currentCount < starSettings.maxConcurrent) {
@@ -739,63 +876,13 @@
     setTimeout(launchStar, starSettings.launchInterval);
   }
 
-  function handleResize() {
-    // Автоматическая адаптация при изменении размера
-  }
-
-  window.addEventListener('resize', handleResize);
-  
+  // Initialize star animation
   window.addEventListener('load', () => {
     setTimeout(launchStar, 1000);
   });
-</script>
+  </script>
 
-<style>
-  @keyframes starFall {
-    0% {
-      transform: translateY(0) scale(0.8);
-      opacity: 0;
-      filter: blur(0.5px) brightness(1);
-    }
-    10% {
-      opacity: 0.9;
-      filter: blur(0.5px) brightness(1.8);
-    }
-    40% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    85% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    90% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    95% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    100% {
-      transform: translateY(calc(100vh + 200px)) scale(1.1);
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-  }
-
-  .hero-grid-container,
-  .stars-container {
-    width: 100vw !important;
-    left: 0 !important;
-  }
-
-  .hero-grid {
-    width: 100vw !important;
-  }
-</style>
-
-<script>
+  <script>
   // Gradient background - FIXED VERSION
   function Gradient() {
     "use strict";
@@ -815,7 +902,6 @@
       }
       t.ctx.putImageData(t.ig, 0, 0), t.painting = !1
     }, t.connect = function (i) {
-      // FIX: Check if canvas exists before getting context
       t.canvas = document.getElementById(i);
       if (!t.canvas) {
         console.warn('Canvas element not found:', i);
@@ -834,7 +920,6 @@
       t.width = window.innerWidth, t.height = window.innerHeight, t.width_half = t.width >> 1, t.height_half = t.height >> 1, t.dist = Math.pow(t.width_half, 2) + Math.pow(t.height_half, 2), t.canvas.setAttribute("width", t.width), t.canvas.setAttribute("height", t.height), t.ig = t.ctx.getImageData(0, 0, t.width, t.height)
     }, t.initGradient = function (i) {
       t.connect(i);
-      // FIX: Check if canvas was successfully connected
       if (!t.canvas || !t.ctx) {
         console.warn('Gradient initialization failed - canvas not available');
         return;
@@ -851,7 +936,6 @@
   document.addEventListener('DOMContentLoaded', () => {
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (!motionQuery.matches) {
-      // FIX: Wait a bit to ensure canvas is available
       setTimeout(() => {
         const gradient = new Gradient();
         try {
@@ -862,228 +946,7 @@
       }, 100);
     }
   });
-</script>
-
-<script>
-// Contact form submission - SINGLE VERSION
-(function() {
-    const contactForm = document.getElementById('contactForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const successMessage = document.getElementById('successMessage');
-    const errorMessage = document.getElementById('errorMessage');
-
-    console.log('✅ Form elements found!');
-
-    if(contactForm && !contactForm.hasListener) {
-        console.log('✅ Adding submit event listener');
-        
-        contactForm.hasListener = true; // Помечаем что обработчик добавлен
-        
-        contactForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log('🔄 Form submission started');
-            
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const project = document.getElementById('project').value;
-            const message = document.getElementById('message').value.trim();
-
-            console.log('📝 Form data:', { name, email, project, message });
-
-            if(!name || !email || !project) {
-                console.log('❌ Validation failed');
-                showFormError('Please fill name, email and project type.');
-                return;
-            }
-
-            // Show loading state
-            submitBtn.textContent = 'Sending...';
-            submitBtn.disabled = true;
-            errorMessage.style.display = 'none';
-
-            try {
-                console.log('📤 Sending to server...');
-                
-                const response = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, project, message })
-                });
-
-                console.log('📥 Response status:', response.status);
-                
-                const data = await response.json();
-                console.log('📦 Response data:', data);
-
-                if(data.success) {
-                    console.log('✅ Message sent successfully!');
-                    successMessage.style.display = 'block';
-                    contactForm.reset();
-                    
-                    setTimeout(() => {
-                        successMessage.style.display = 'none';
-                    }, 5000);
-                } else {
-                    throw new Error(data.error || 'Failed to send message');
-                }
-            } catch (error) {
-                console.error('❌ Error:', error);
-                showFormError('Sorry, there was an error sending your message. Please try again.');
-            } finally {
-                submitBtn.textContent = 'Send request';
-                submitBtn.disabled = false;
-            }
-        });
-
-        function showFormError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
-    }
-
-    console.log('🚀 Contact form script loaded');
-})();
-</script>
-
-<script>
-// ==================== ДИНАМИЧЕСКАЯ ЗАГРУЗКА КОНТЕНТА ====================
-
-// Загрузка динамического контента
-async function loadSiteContent() {
-  try {
-    const response = await fetch('/api/public/content');
-    const content = await response.json();
-    
-    // Обновляем контент на странице
-    updateSiteContent(content);
-  } catch (error) {
-    console.error('Ошибка загрузки контента:', error);
-  }
-}
-
-function updateSiteContent(content) {
-  // Hero section
-  if (content.hero_title) {
-    const heroTitle = document.querySelector('.hero-title');
-    if (heroTitle) heroTitle.textContent = content.hero_title;
-  }
-  
-  if (content.hero_subtitle) {
-    const heroSub = document.querySelector('.hero-sub');
-    if (heroSub) heroSub.textContent = content.hero_subtitle;
-  }
-
-  // Services section
-  if (Array.isArray(content.services)) {
-    updateServices(content.services);
-  }
-
-  // Portfolio section
-  if (Array.isArray(content.portfolio)) {
-    updatePortfolio(content.portfolio);
-  }
-
-  // Contact section
-  if (content.contact_info && typeof content.contact_info === 'object') {
-    updateContactInfo(content.contact_info);
-  }
-}
-
-function updateServices(services) {
-  const servicesGrid = document.querySelector('.services-grid');
-  if (!servicesGrid) return;
-
-  let servicesHTML = '';
-  services.forEach(service => {
-    servicesHTML += `
-      <div class="service reveal">
-        <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
-        <h4>${service.title || 'Услуга'}</h4>
-        <p>${service.description || 'Описание услуги'}</p>
-      </div>
-    `;
-  });
-  
-  servicesGrid.innerHTML = servicesHTML;
-  
-  // Переинициализируем анимации для новых элементов
-  initAnimations();
-}
-  
-  servicesGrid.innerHTML = servicesHTML;
-}
-
-function updatePortfolio(portfolio) {
-  const portfolioGrid = document.querySelector('.portfolio-grid');
-  if (!portfolioGrid) return;
-
-  let portfolioHTML = '';
-  portfolio.forEach(item => {
-    portfolioHTML += `
-      <article class="project reveal" aria-label="${item.title || 'Проект'}">
-        <div class="meta">${item.title || 'Название проекта'}</div>
-        <p>${item.description || 'Описание проекта'}</p>
-      </article>
-    `;
-  });
-  
-  portfolioGrid.innerHTML = portfolioHTML;
-  
-  // Переинициализируем анимации для новых элементов
-  initAnimations();
-}
-  
-  portfolioGrid.innerHTML = portfolioHTML;
-}
-
-function updateContactInfo(contact) {
-  // Email
-  const emailLink = document.querySelector('a[href^="mailto:"]');
-  if (emailLink && contact.email) {
-    emailLink.href = `mailto:${contact.email}`;
-    emailLink.textContent = contact.email;
-  }
-
-function initAnimations() {
-  // Повторно инициализируем анимации появления
-  const observer = new IntersectionObserver((entries, obs) => {
-    entries.forEach(en => {
-      if (en.isIntersecting) {
-        en.target.classList.add('visible');
-        obs.unobserve(en.target);
-      }
-    });
-  }, { threshold: 0.12 });
-  
-  document.querySelectorAll('.reveal').forEach(el => {
-    if (!el.classList.contains('visible')) {
-      observer.observe(el);
-    }
-  });
-}
-
-  // Phone
-  const phoneElement = document.querySelector('p:has(.fa-phone) span');
-  if (phoneElement && contact.phone) {
-    phoneElement.textContent = contact.phone;
-  }
-
-  // Address
-  const addressElement = document.querySelector('p:has(.fa-map-marker-alt) span');
-  if (addressElement && contact.address) {
-    addressElement.textContent = contact.address;
-  }
-}
-
-// Загружаем контент при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-  loadSiteContent();
-});
-
-// ==================== КОНЕЦ ДИНАМИЧЕСКОЙ ЗАГРУЗКИ ====================
-</script>
+  </script>
 
 </body>
 </html>
