@@ -1038,15 +1038,15 @@
             // Получаем значения из формы
             const name = formData.get('name')?.toString().trim() || '';
             const email = formData.get('email')?.toString().trim() || '';
-            const project = formData.get('project')?.toString().trim() || '';
+            const request = formData.get('request')?.toString().trim() || ''; // Ищем поле request
             const message = formData.get('message')?.toString().trim() || '';
 
-            console.log('📝 Form data:', { name, email, project, message });
+            console.log('📝 Form data:', { name, email, request, message });
 
-            // Валидация
-            if(!name || !email || !project) {
-                console.log('❌ Validation failed - project is empty');
-                showFormError('Please select a project type.');
+            // Валидация - теперь проверяем request вместо project
+            if(!name || !email || !request) {
+                console.log('❌ Validation failed - request is empty');
+                showFormError('Please fill name, email and request type.');
                 return;
             }
 
@@ -1067,7 +1067,7 @@
                     body: JSON.stringify({ 
                         name, 
                         email, 
-                        request: project,
+                        request: request,  // Отправляем как request
                         message 
                     })
                 });
