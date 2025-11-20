@@ -114,7 +114,7 @@ function renderMessages(messages) {
                 <td>${message.id}</td>
                 <td>${escapeHtml(message.name)}</td>
                 <td>${escapeHtml(message.email)}</td>
-                <td>${escapeHtml(message.project_type)}</td>
+                <td>${escapeHtml(message.request)}</td>
                 <td><span class="${statusClass}">${getStatusText(message.status)}</span></td>
                 <td>${date}</td>
                 <td>
@@ -189,7 +189,7 @@ function showMessageModal(message) {
         </div>
         <div class="message-field">
             <div class="field-label">Тип проекта</div>
-            <div class="field-value">${escapeHtml(message.project_type)}</div>
+            <div class="field-value">${escapeHtml(message.request)}</div>
         </div>
         <div class="message-field">
             <div class="field-label">Сообщение</div>
