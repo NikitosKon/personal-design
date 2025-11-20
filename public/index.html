@@ -1028,10 +1028,12 @@
             e.preventDefault();
             console.log('🔄 Form submission started');
             
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const project = document.querySelector('select[name="project"]').value; // ИСПРАВЛЕНО: ищем по name
-            const message = document.getElementById('message').value.trim();
+            // Получаем значения из формы - безопасно
+            const formData = new FormData(contactForm);
+            const name = formData.get('name')?.toString().trim() || '';
+            const email = formData.get('email')?.toString().trim() || '';
+            const project = formData.get('project')?.toString().trim() || '';
+            const message = formData.get('message')?.toString().trim() || '';
 
             console.log('📝 Form data:', { name, email, project, message });
 
@@ -1118,7 +1120,6 @@
     console.log('🚀 Contact form script loaded');
 })();
 </script>
-
 
 <!-- Модальное окно для Order Now -->
 <div id="order-modal" class="modal" style="display: none;">
