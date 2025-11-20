@@ -1006,19 +1006,22 @@
 </script>
 
 <script>
-// Contact form submission - SINGLE VERSION
+// Contact form submission - FIXED VERSION
 (function() {
     const contactForm = document.getElementById('contactForm');
     const submitBtn = document.getElementById('submitBtn');
     const successMessage = document.getElementById('successMessage');
     const errorMessage = document.getElementById('errorMessage');
 
-    console.log('✅ Form elements found!');
+    console.log('✅ Form elements found:', { 
+        contactForm: !!contactForm, 
+        submitBtn: !!submitBtn,
+        successMessage: !!successMessage,
+        errorMessage: !!errorMessage
+    });
 
-    if(contactForm && !contactForm.hasListener) {
+    if(contactForm) {
         console.log('✅ Adding submit event listener');
-        
-        contactForm.hasListener = true; // Помечаем что обработчик добавлен
         
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1026,20 +1029,22 @@
             
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
-            const request = document.getElementById('request').value.trim();
+            const project = document.getElementById('project').value; // ИСПРАВЛЕНО: project вместо request
             const message = document.getElementById('message').value.trim();
 
-            console.log('📝 Form data:', { name, email, request, message });
+            console.log('📝 Form data:', { name, email, project, message });
 
-            if(!name || !email || !request) {
+            // Валидация
+            if(!name || !email || !project) {
                 console.log('❌ Validation failed');
-                showFormError('Please fill name, email and request type.');
+                showFormError('Please fill name, email and project type.');
                 return;
             }
 
-            // Show loading state
+            // Показываем состояние загрузки
             submitBtn.textContent = 'Sending...';
             submitBtn.disabled = true;
+            contactForm.classList.add('loading');
             errorMessage.style.display = 'none';
 
             try {
@@ -1050,11 +1055,20 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, request, message })
+                    body: JSON.stringify({ 
+                        name, 
+                        email, 
+                        project,  // ИСПРАВЛЕНО: project вместо request
+                        message 
+                    })
                 });
 
                 console.log('📥 Response status:', response.status);
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 console.log('📦 Response data:', data);
 
@@ -1071,17 +1085,33 @@
                 }
             } catch (error) {
                 console.error('❌ Error:', error);
-                showFormError('Sorry, there was an error sending your message. Please try again.');
+                let errorMsg = 'Sorry, there was an error sending your message. ';
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMsg += 'Network error - please check your connection.';
+                } else {
+                    errorMsg += 'Please try again.';
+                }
+                
+                showFormError(errorMsg);
             } finally {
                 submitBtn.textContent = 'Send request';
                 submitBtn.disabled = false;
+                contactForm.classList.remove('loading');
             }
         });
 
         function showFormError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
+            
+            // Автоскрытие ошибки через 5 секунд
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
         }
+    } else {
+        console.error('❌ Contact form not found!');
     }
 
     console.log('🚀 Contact form script loaded');
