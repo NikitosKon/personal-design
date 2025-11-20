@@ -1005,6 +1005,7 @@
   });
 </script>
 
+
 <script>
 // Contact form submission - FIXED VERSION
 (function() {
@@ -1029,7 +1030,7 @@
             
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
-            const project = document.getElementById('project').value; // ИСПРАВЛЕНО: project вместо request
+            const project = document.querySelector('select[name="project"]').value; // ИСПРАВЛЕНО: ищем по name
             const message = document.getElementById('message').value.trim();
 
             console.log('📝 Form data:', { name, email, project, message });
@@ -1058,7 +1059,7 @@
                     body: JSON.stringify({ 
                         name, 
                         email, 
-                        project,  // ИСПРАВЛЕНО: project вместо request
+                        request: project,  // Отправляем как "request" на сервер
                         message 
                     })
                 });
@@ -1117,6 +1118,7 @@
     console.log('🚀 Contact form script loaded');
 })();
 </script>
+
 
 <!-- Модальное окно для Order Now -->
 <div id="order-modal" class="modal" style="display: none;">
