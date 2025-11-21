@@ -39,7 +39,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
-  // Создание таблиц
+  // Таблицы
   db.run(`CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -56,19 +56,6 @@ db.serialize(() => {
     password TEXT NOT NULL
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS content (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    section TEXT UNIQUE NOT NULL,
-    title TEXT,
-    content TEXT
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-  )`);
-
   db.run(`CREATE TABLE IF NOT EXISTS site_content (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     section TEXT UNIQUE NOT NULL,
@@ -78,7 +65,7 @@ db.serialize(() => {
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Создание админов
+  // Админы
   const adminPassword = process.env.ADMIN_PASSWORD;
   const admin2Password = process.env.ADMIN2_PASSWORD;
 
@@ -88,13 +75,22 @@ db.serialize(() => {
   }
 
   const hashedPassword = bcrypt.hashSync(adminPassword, 10);
-  const hashedPassword2 = bcrypt.hashSync(admin2Password || 'admin456', 10);
+  const hashedPassword2 = bcrypt.hashSync(admin2Password || 'thklty13', 10);
 
   db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin', hashedPassword]);
   db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin2', hashedPassword2]);
+
+  // Инициализация секций контента (если их ещё нет)
+  const sections = ['hero_title', 'hero_subtitle', 'services', 'portfolio', 'contact_info'];
+  sections.forEach(sec => {
+    db.run(
+      `INSERT OR IGNORE INTO site_content (section, title, content) VALUES (?, ?, ?)`,
+      [sec, sec, (sec === 'services' || sec === 'portfolio') ? '[]' : '{}']
+    );
+  });
 });
 
-// Middleware для JWT
+// JWT Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -124,7 +120,7 @@ app.post('/api/contact', (req, res) => {
   );
 });
 
-// Получение сообщений
+// Messages
 app.get('/api/messages', authenticateToken, (req, res) => {
   db.all(`SELECT * FROM messages ORDER BY created_at DESC`, (err, rows) => {
     if (err) return res.status(500).json({ error: 'Ошибка при получении сообщений' });
@@ -132,7 +128,6 @@ app.get('/api/messages', authenticateToken, (req, res) => {
   });
 });
 
-// Обновление статуса
 app.put('/api/messages/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -142,7 +137,6 @@ app.put('/api/messages/:id', authenticateToken, (req, res) => {
   });
 });
 
-// Удаление
 app.delete('/api/messages/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   db.run(`DELETE FROM messages WHERE id = ?`, [id], function(err) {
@@ -151,7 +145,7 @@ app.delete('/api/messages/:id', authenticateToken, (req, res) => {
   });
 });
 
-// Логин админа
+// Admin login
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   db.get(`SELECT * FROM admins WHERE username = ?`, [username], (err, admin) => {
@@ -170,6 +164,36 @@ app.get('/api/admin/verify', authenticateToken, (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
+// Контент
+app.get('/api/content', authenticateToken, (req, res) => {
+  db.all(`SELECT * FROM site_content`, (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Ошибка при получении контента' });
+    res.json(rows);
+  });
+});
+
+app.get('/api/content/:section', authenticateToken, (req, res) => {
+  const { section } = req.params;
+  db.get(`SELECT * FROM site_content WHERE section = ?`, [section], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Секция не найдена' });
+    res.json(row);
+  });
+});
+
+app.put('/api/content/:section', authenticateToken, (req, res) => {
+  const { section } = req.params;
+  const { title, content } = req.body;
+  db.run(
+    `UPDATE site_content SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE section = ?`,
+    [title, content, section],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Ошибка при обновлении контента' });
+      res.json({ success: true, message: 'Контент обновлен' });
+    }
+  );
+});
+
 // Публичный контент
 app.get('/api/public/content', (req, res) => {
   db.all(`SELECT section, content FROM site_content`, (err, rows) => {
@@ -177,14 +201,14 @@ app.get('/api/public/content', (req, res) => {
 
     const content = {};
     rows.forEach(row => {
-      try { content[row.section] = JSON.parse(row.content); } 
+      try { content[row.section] = JSON.parse(row.content); }
       catch { content[row.section] = row.content; }
     });
     res.json(content);
   });
 });
 
-// Запуск сервера
+// ================= Запуск сервера =================
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
   console.log(`Основной сайт: http://localhost:${PORT}`);
