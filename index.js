@@ -58,36 +58,26 @@ const db = new sqlite3.Database(dbPath, (err) => {
         
         // Начальные данные
         const initialContent = [
-          { title: 'hero_title', content: 'We craft premium logos, posters, social content, promo videos & 3D visuals.' },
-          { title: 'hero_subtitle', content: 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.' },
-
-// Начальные данные (только структура, без контента)
-const initialContent = [
-  { 
-    title: 'hero_title', 
-    content: 'We craft premium logos, posters, social content, promo videos & 3D visuals.' 
-  },
-  { 
-    title: 'hero_subtitle', 
-    content: 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.' 
-  },
-  { 
-    title: 'services', 
-    content: '[]'  // Пустой массив
-  },
-  { 
-    title: 'portfolio', 
-    content: '[]'  // Пустой массив
-  },
-  { 
-    title: 'contact_info', 
-    content: '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}' 
-  }
-];
-
-          { title: 'services', content: '[]' },
-          { title: 'portfolio', content: '[]' },
-          { title: 'contact_info', content: '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}' }
+          { 
+            title: 'hero_title', 
+            content: 'We craft premium logos, posters, social content, promo videos & 3D visuals.' 
+          },
+          { 
+            title: 'hero_subtitle', 
+            content: 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.' 
+          },
+          { 
+            title: 'services', 
+            content: '[]'
+          },
+          { 
+            title: 'portfolio', 
+            content: '[]'
+          },
+          { 
+            title: 'contact_info', 
+            content: '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}' 
+          }
         ];
 
         initialContent.forEach(item => {
