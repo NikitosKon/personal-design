@@ -11,8 +11,6 @@ import multer from 'multer';
 
 dotenv.config();
 
-const path = require('path');
-const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -272,88 +270,6 @@ app.put('/api/messages/:id', authenticateToken, (req, res) => {
   if (!status) {
     return res.status(400).json({ error: 'Status is required' });
   }
-// Сохранение контента
-app.put('/api/content/:title', async (req, res) => {
-    try {
-        const { title } = req.params;
-        const { content } = req.body;
-        
-        await dbRun(
-            `INSERT OR REPLACE INTO content (title, content, updated_at) 
-             VALUES (?, ?, CURRENT_TIMESTAMP)`,
-            [title, content]
-        );
-        
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error saving content:', error);
-        res.status(500).json({ error: 'Failed to save content' });
-    }
-});
-
-// Получение контента (публичный доступ)
-app.get('/api/public/content/:title', async (req, res) => {
-    try {
-        const { title } = req.params;
-        const content = await dbQuery(
-            "SELECT * FROM content WHERE title = ?",
-            [title]
-        );
-        
-        res.json(content[0] || { content: '' });
-    } catch (error) {
-        console.error('Error fetching content:', error);
-        res.status(500).json({ error: 'Failed to fetch content' });
-    }
-});
-
-// Получение контента (админка)
-app.get('/api/content/:title', async (req, res) => {
-    try {
-        const { title } = req.params;
-        const content = await dbQuery(
-            "SELECT * FROM content WHERE title = ?",
-            [title]
-        );
-        
-        res.json(content[0] || { content: '' });
-    } catch (error) {
-        console.error('Error fetching content:', error);
-        res.status(500).json({ error: 'Failed to fetch content' });
-    }
-});
-
-// Загрузка файлов
-app.post('/api/upload', async (req, res) => {
-    try {
-        if (!req.files || !req.files.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-        
-        const file = req.files.file;
-        const filename = `${Date.now()}-${file.name}`;
-        const uploadPath = path.join(__dirname, 'uploads', filename);
-        
-        // Сохраняем файл
-        await file.mv(uploadPath);
-        
-        // Сохраняем информацию в базу
-        await dbRun(
-            `INSERT INTO uploads (filename, original_name, file_path, file_size, mime_type) 
-             VALUES (?, ?, ?, ?, ?)`,
-            [filename, file.name, `/uploads/${filename}`, file.size, file.mimetype]
-        );
-        
-        res.json({ 
-            success: true, 
-            url: `/uploads/${filename}`,
-            filename 
-        });
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        res.status(500).json({ error: 'Failed to upload file' });
-    }
-});
 
   db.run(
     'UPDATE messages SET status = ? WHERE id = ?',
