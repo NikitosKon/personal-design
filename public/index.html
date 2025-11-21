@@ -1894,5 +1894,223 @@ document.addEventListener('click', function(e) {
 });
 </script>
 
+<script>
+// Функциональность кнопки "See all projects" для динамического контента
+function initPortfolioToggle() {
+  const btn = document.querySelector('a.btn[href="javascript:void(0)"]');
+  if (!btn) return;
+
+  let expanded = false;
+
+  // Удаляем старый обработчик если есть
+  btn.replaceWith(btn.cloneNode(true));
+  const newBtn = document.querySelector('a.btn[href="javascript:void(0)"]');
+
+  newBtn.addEventListener("click", () => {
+    expanded = !expanded;
+
+    // Находим все проекты, начиная с 4-го (индексы 3,4,5)
+    const allProjects = document.querySelectorAll('.portfolio-grid .project');
+    const hiddenProjects = Array.from(allProjects).slice(3);
+
+    hiddenProjects.forEach(p => {
+      p.style.display = expanded ? "flex" : "none";
+    });
+
+    newBtn.textContent = expanded ? "Show less" : "See all projects";
+  });
+
+  // Изначально скрываем проекты с 4-го
+  setTimeout(() => {
+    const allProjects = document.querySelectorAll('.portfolio-grid .project');
+    const hiddenProjects = Array.from(allProjects).slice(3);
+    hiddenProjects.forEach(p => {
+      p.style.display = "none";
+    });
+  }, 100);
+}
+
+// Обновленная функция для портфолио
+function updatePortfolio(portfolio) {
+  const container = document.querySelector('.portfolio-grid');
+  if (!container || !portfolio || portfolio.length === 0) {
+    console.log('No portfolio container or empty portfolio');
+    return;
+  }
+
+  console.log('Updating portfolio with:', portfolio);
+  
+  container.innerHTML = portfolio.map((item, index) => `
+    <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
+             aria-label="${item.title || 'Project'}" 
+             style="${index >= 3 ? 'display: none;' : ''}">
+      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:120px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
+      <div class="meta">${item.title || 'Project'}</div>
+      <p>${item.description || ''}</p>
+    </article>
+  `).join('');
+
+  // Реинициализируем анимации
+  setTimeout(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.project.reveal').forEach(el => {
+      observer.observe(el);
+    });
+
+    // Инициализируем переключение проектов
+    initPortfolioToggle();
+  }, 100);
+}
+
+// Обновляем функцию загрузки контента
+async function loadDynamicContent() {
+  try {
+    console.log('Loading dynamic content for main site...');
+    
+    const [heroTitleRes, heroSubtitleRes, servicesRes, portfolioRes, contactRes] = await Promise.all([
+      fetch('/api/public/content/hero_title'),
+      fetch('/api/public/content/hero_subtitle'),
+      fetch('/api/public/content/services'),
+      fetch('/api/public/content/portfolio'),
+      fetch('/api/public/content/contact_info')
+    ]);
+
+    const heroTitleData = await heroTitleRes.json();
+    const heroSubtitleData = await heroSubtitleRes.json();
+    const servicesData = await servicesRes.json();
+    const portfolioData = await portfolioRes.json();
+    const contactData = await contactRes.json();
+
+    // Обновляем контент на странице
+    if (heroTitleData.content) {
+      const heroHeading = document.getElementById('hero-heading');
+      if (heroHeading) {
+        heroHeading.textContent = heroTitleData.content;
+      }
+    }
+    
+    if (heroSubtitleData.content) {
+      const heroSub = document.querySelector('.hero-sub');
+      if (heroSub) {
+        heroSub.textContent = heroSubtitleData.content;
+      }
+    }
+
+    // Обновляем услуги
+    if (servicesData.content) {
+      try {
+        const services = JSON.parse(servicesData.content);
+        updateServices(services);
+      } catch (e) {
+        console.error('Error parsing services:', e);
+      }
+    }
+
+    // Обновляем портфолио с поддержкой toggle
+    if (portfolioData.content) {
+      try {
+        const portfolio = JSON.parse(portfolioData.content);
+        updatePortfolio(portfolio);
+      } catch (e) {
+        console.error('Error parsing portfolio:', e);
+      }
+    }
+
+    // Обновляем контакты
+    if (contactData.content) {
+      try {
+        const contact = JSON.parse(contactData.content);
+        updateContactInfo(contact);
+      } catch (e) {
+        console.error('Error parsing contact info:', e);
+      }
+    }
+
+    console.log('Dynamic content applied successfully');
+
+  } catch (error) {
+    console.error('Error loading dynamic content:', error);
+  }
+}
+
+// Существующие функции оставляем без изменений
+function updateServices(services) {
+  const container = document.querySelector('.services-grid');
+  if (!container || !services || services.length === 0) {
+    console.log('No services container or empty services');
+    return;
+  }
+
+  console.log('Updating services with:', services);
+  
+  container.innerHTML = services.map(service => `
+    <div class="service reveal">
+      <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
+      <h4>${service.title || 'Service'}</h4>
+      <p>${service.description || ''}</p>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.service.reveal').forEach(el => {
+      observer.observe(el);
+    });
+  }, 100);
+}
+
+function updateContactInfo(contact) {
+  console.log('Updating contact info with:', contact);
+  
+  if (contact.email) {
+    const emailLinks = document.querySelectorAll('a[href^="mailto:"]');
+    emailLinks.forEach(link => {
+      link.href = `mailto:${contact.email}`;
+      if (link.textContent.includes('@')) {
+        link.textContent = contact.email;
+      }
+    });
+  }
+  
+  if (contact.phone) {
+    const phoneElements = document.querySelectorAll('p:has(.fa-phone) span, p:has(.fa-phone)');
+    phoneElements.forEach(el => {
+      if (el.textContent.includes('+')) {
+        el.textContent = contact.phone;
+      }
+    });
+  }
+  
+  if (contact.address) {
+    const addressElements = document.querySelectorAll('p:has(.fa-map-marker-alt) span, p:has(.fa-map-marker-alt)');
+    addressElements.forEach(el => {
+      if (el.textContent && !el.textContent.includes('@')) {
+        el.textContent = contact.address;
+      }
+    });
+  }
+}
+
+// Загружаем контент при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Main site DOM loaded, loading dynamic content...');
+  loadDynamicContent();
+});
+</script>
+
 </body>
 </html>
