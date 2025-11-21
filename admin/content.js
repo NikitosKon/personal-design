@@ -482,3 +482,130 @@ document.addEventListener('DOMContentLoaded', () => {
         firstBtn.classList.add('active');
     }
 });
+
+// Функция удаления изображения из портфолио
+function removePortfolioImage(index) {
+    if (!confirm('Удалить это изображение?')) return;
+    
+    const card = document.querySelector(`#portfolio-list .item-card[data-index="${index}"]`);
+    if (card) {
+        const imageInput = card.querySelector('.portfolio-image');
+        const previewContainer = card.querySelector('.image-preview-container');
+        
+        // Очищаем поле ввода
+        imageInput.value = '';
+        
+        // Удаляем превью
+        previewContainer.innerHTML = '';
+        
+        showSuccess('Изображение удалено');
+    }
+}
+
+// Обновите функцию renderPortfolio для нового HTML:
+function renderPortfolio(portfolio) {
+    const container = document.getElementById('portfolio-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!portfolio || portfolio.length === 0) {
+        container.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 20px;">Нет работ в портфолио. Добавьте первую работу.</p>';
+        return;
+    }
+    
+    portfolio.forEach((item, index) => {
+        const html = `
+            <div class="item-card" data-index="${index}">
+                <div class="item-header">
+                    <h3>Работа ${index + 1}</h3>
+                    <button type="button" class="delete-btn" onclick="deletePortfolioItem(${index})">Удалить</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Изображение</label>
+                    <div class="upload-container">
+                        <input type="text" class="form-input portfolio-image" value="${escapeHtml(item.image || '')}" placeholder="URL изображения">
+                        <button type="button" class="upload-btn" onclick="uploadPortfolioImage(${index})">Загрузить</button>
+                    </div>
+                    <div class="image-preview-container">
+                        ${item.image ? `
+                            <div class="image-with-remove">
+                                <img src="${item.image}" class="image-preview" onerror="this.style.display='none'">
+                                <button type="button" class="remove-image-btn" onclick="removePortfolioImage(${index})" title="Удалить изображение">×</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Название</label>
+                    <input type="text" class="form-input portfolio-title" value="${escapeHtml(item.title || '')}" placeholder="Название проекта">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea class="form-textarea portfolio-desc" placeholder="Описание проекта">${escapeHtml(item.description || '')}</textarea>
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+}
+
+// Обновите функцию uploadPortfolioImage для нового HTML:
+async function uploadPortfolioImage(index) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const card = document.querySelector(`#portfolio-list .item-card[data-index="${index}"]`);
+        const uploadBtn = card.querySelector('.upload-btn');
+        
+        // Показываем загрузку
+        uploadBtn.textContent = 'Загрузка...';
+        uploadBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${API_BASE}/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentToken}` },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.url) {
+                const imageInput = card.querySelector('.portfolio-image');
+                const previewContainer = card.querySelector('.image-preview-container');
+                
+                // Обновляем поле ввода
+                imageInput.value = data.url;
+                
+                // Обновляем превью
+                previewContainer.innerHTML = `
+                    <div class="image-with-remove">
+                        <img src="${data.url}" class="image-preview" onerror="this.style.display='none'">
+                        <button type="button" class="remove-image-btn" onclick="removePortfolioImage(${index})" title="Удалить изображение">×</button>
+                    </div>
+                `;
+                
+                showSuccess('Изображение загружено!');
+            } else {
+                throw new Error(data.message || 'Ошибка загрузки');
+            }
+        } catch (err) {
+            console.error('Upload error:', err);
+            showError('Ошибка загрузки изображения: ' + err.message);
+        } finally {
+            uploadBtn.textContent = 'Загрузить';
+            uploadBtn.disabled = false;
+        }
+    };
+
+    fileInput.click();
+}
