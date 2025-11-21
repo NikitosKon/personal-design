@@ -83,6 +83,22 @@ function loadMessages() {
 
 function renderMessages(messages) {
     const container = document.getElementById('messagesContainer');
+    container.innerHTML = "";
+
+    messages.forEach(msg => {
+        const messageHTML = `
+            <div class="message">
+                <p><strong>Name:</strong> ${escapeHtml(msg.name)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(msg.email)}</p>
+                <p><strong>Project:</strong> ${escapeHtml(msg.project_type)}</p>
+                <p><strong>Message:</strong> ${escapeHtml(msg.message)}</p>
+                <p><strong>Status:</strong> ${escapeHtml(msg.status)}</p>
+            </div>
+        `;
+        container.innerHTML += messageHTML;
+    });
+}
+
     
     if (messages.length === 0) {
         container.innerHTML = '<div class="loading">Нет сообщений</div>';
@@ -145,13 +161,14 @@ function getStatusText(status) {
 }
 
 function escapeHtml(unsafe) {
+    if (!unsafe) return ""; // если undefined или null, возвращаем пустую строку
     return unsafe
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
- }
+}
 
 function viewMessage(id) {
     fetch(`${API_BASE}/messages`, {
