@@ -672,7 +672,7 @@
 
           <div style="margin-bottom:12px">
             <label for="request">Request Type</label>
-            <input id="request" name="request" class="form-control" required placeholder="Describe your request">
+            <input id="project" name="project" class="form-control" required placeholder="Describe your request">
           </div>
 
           <div style="margin-bottom:14px">
@@ -1030,6 +1030,7 @@
             
             // ОТЛАДКА: Покажем все поля формы
             const formData = new FormData(contactForm);
+const project = formData.get('project')?.trim();
             console.log('🔍 All form fields:');
             for (let [key, value] of formData.entries()) {
                 console.log(`  ${key}: ${value}`);
@@ -1038,13 +1039,13 @@
             // Получаем значения из формы
             const name = formData.get('name')?.toString().trim() || '';
             const email = formData.get('email')?.toString().trim() || '';
-            const request = formData.get('request')?.toString().trim() || ''; // Ищем поле request
+            const request = formData.get('project')?.toString().trim() || ''; // Ищем поле request
             const message = formData.get('message')?.toString().trim() || '';
 
             console.log('📝 Form data:', { name, email, request, message });
 
             // Валидация - теперь проверяем request вместо project
-            if(!name || !email || !request) {
+            if(!name || !email || !project) {
                 console.log('❌ Validation failed - request is empty');
                 showFormError('Please fill name, email and request type.');
                 return;
@@ -1067,7 +1068,7 @@
                     body: JSON.stringify({ 
                         name, 
                         email, 
-                        request: request,  // Отправляем как request
+                        project,  // Отправляем как request
                         message 
                     })
                 });
