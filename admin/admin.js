@@ -85,22 +85,7 @@ function renderMessages(messages) {
     const container = document.getElementById('messagesContainer');
     container.innerHTML = "";
 
-    messages.forEach(msg => {
-        const messageHTML = `
-            <div class="message">
-                <p><strong>Name:</strong> ${escapeHtml(msg.name)}</p>
-                <p><strong>Email:</strong> ${escapeHtml(msg.email)}</p>
-                <p><strong>Project:</strong> ${escapeHtml(msg.project_type)}</p>
-                <p><strong>Message:</strong> ${escapeHtml(msg.message)}</p>
-                <p><strong>Status:</strong> ${escapeHtml(msg.status)}</p>
-            </div>
-        `;
-        container.innerHTML += messageHTML;
-    });
-}
-
-    
-    if (messages.length === 0) {
+    if (!messages || messages.length === 0) {
         container.innerHTML = '<div class="loading">Нет сообщений</div>';
         return;
     }
@@ -130,7 +115,7 @@ function renderMessages(messages) {
                 <td>${message.id}</td>
                 <td>${escapeHtml(message.name)}</td>
                 <td>${escapeHtml(message.email)}</td>
-                <td>${escapeHtml(message.request)}</td>
+                <td>${escapeHtml(message.project_type)}</td>
                 <td><span class="${statusClass}">${getStatusText(message.status)}</span></td>
                 <td>${date}</td>
                 <td>
@@ -150,6 +135,7 @@ function renderMessages(messages) {
 
     container.innerHTML = tableHTML;
 }
+
 
 function getStatusText(status) {
     const statusMap = {
@@ -206,7 +192,7 @@ function showMessageModal(message) {
         </div>
         <div class="message-field">
             <div class="field-label">Тип проекта</div>
-            <div class="field-value">${escapeHtml(message.request)}</div>
+            <div class="field-value">${escapeHtml(message.project_type)}</div>
         </div>
         <div class="message-field">
             <div class="field-label">Сообщение</div>
