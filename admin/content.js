@@ -609,3 +609,136 @@ async function uploadPortfolioImage(index) {
 
     fileInput.click();
 }
+
+// content.js - Backend API
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs');
+
+const dbPath = path.join(__dirname, 'database.db');
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+
+// Создаем директорию для загрузок
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Инициализация таблиц для контента
+function initContentDatabase() {
+    const db = new sqlite3.Database(dbPath);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS content (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT UNIQUE NOT NULL,
+            content TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS uploads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            original_name TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            file_size INTEGER,
+            mime_type TEXT,
+            uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    
+    db.close();
+}
+
+// Сохранение/обновление контента
+function saveContent(title, content) {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath);
+        
+        db.run(
+            `INSERT OR REPLACE INTO content (title, content, updated_at) 
+             VALUES (?, ?, CURRENT_TIMESTAMP)`,
+            [title, content],
+            function(err) {
+                db.close();
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ success: true });
+                }
+            }
+        );
+    });
+}
+
+// Получение контента
+function getContent(title) {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath);
+        
+        db.get(
+            "SELECT * FROM content WHERE title = ?",
+            [title],
+            (err, row) => {
+                db.close();
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row || { content: '' });
+                }
+            }
+        );
+    });
+}
+
+// Сохранение информации о загруженном файле
+function saveUploadInfo(fileInfo) {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath);
+        
+        const { filename, originalName, filePath, fileSize, mimeType } = fileInfo;
+        
+        db.run(
+            `INSERT INTO uploads (filename, original_name, file_path, file_size, mime_type) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [filename, originalName, filePath, fileSize, mimeType],
+            function(err) {
+                db.close();
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID, ...fileInfo });
+                }
+            }
+        );
+    });
+}
+
+// Получение информации о файле
+function getUploadInfo(filename) {
+    return new Promise((resolve, reject) => {
+        const db = new sqlite3.Database(dbPath);
+        
+        db.get(
+            "SELECT * FROM uploads WHERE filename = ?",
+            [filename],
+            (err, row) => {
+                db.close();
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            }
+        );
+    });
+}
+
+module.exports = {
+    initContentDatabase,
+    saveContent,
+    getContent,
+    saveUploadInfo,
+    getUploadInfo
+};
