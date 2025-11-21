@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "verify-db": "node deploy.js",
+    "predeploy": "npm run verify-db",
+    "deploy": "git add . && git commit -m \"Deploy: $(date)\" && git push"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

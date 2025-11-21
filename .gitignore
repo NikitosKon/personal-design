@@ -1,7 +1,7 @@
 # Secret files
 .env
 *.db
-database.db
+
 
 # Admin panel
 
@@ -17,6 +17,10 @@ dist/
 
 # Dependencies
 node_modules/
+
+uploads/
+backup.db
+
 
 
 
