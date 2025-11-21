@@ -239,7 +239,7 @@
     display: flex;
     justify-content: center;
     gap: 16px;
-    margin-top: 60px;
+    margin-top: 30px;
     transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   
@@ -529,6 +529,9 @@
       </div>
 
       <div class="hero-inner container reveal">
+<div class="hero-logo">
+  <img src="C:\Users\Gaming PC 2306\Downloads\Telegram Desktop\pd.jpg" alt="Personal Design Logo" style="width: 80px; height: 80px; border-radius: 12px; margin-bottom: 20px;">
+</div>
         <div class="eyebrow">Premium Design & Motion</div>
         <h1 id="hero-heading" class="hero-title">We craft premium logos, posters, social content, promo videos & 3D visuals.</h1>
       <p class="hero-sub">Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.</p>
@@ -560,8 +563,8 @@
           </a>
         </div>
         
-        <div style="text-align:center;margin-top:12px;color:var(--muted);font-size:14px">
-          Click any icon to contact us and place your order
+        <div style="text-align:center;margin-top:20px;margin-left:5px;color:var(--muted);font-size:14px">
+          Click any icon to contact us and place your order.
         </div>
       </div>
     </section>
@@ -955,6 +958,51 @@
     left: 0 !important;
   }
 
+.hero-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.hero-logo img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid transparent;
+  
+  /* Градиент в стиле твоего бренда */
+  background: linear-gradient(
+    45deg,
+    #00d7a8,
+    #00b894,
+    #4db4ff,
+    #00d7a8
+  );
+  background-size: 400% 400%;
+  animation: brandGradient 10s ease infinite;
+  
+  box-shadow: 
+    0 0 25px rgba(0, 215, 168, 0.5),
+    0 8px 24px rgba(0,0,0,0.4);
+}
+
+@keyframes brandGradient {
+  0% {
+    background-position: 0% 50%;
+    box-shadow: 0 0 25px rgba(0, 215, 168, 0.5);
+  }
+  50% {
+    background-position: 100% 50%;
+    box-shadow: 0 0 35px rgba(77, 180, 255, 0.6);
+  }
+  100% {
+    background-position: 0% 50%;
+    box-shadow: 0 0 25px rgba(0, 215, 168, 0.5);
+  }
+}
   .hero-grid {
     width: 100vw !important;
   }
@@ -1260,7 +1308,7 @@ const project = formData.get('project')?.trim();
   }
   
   /* Полноэкранная фоновая сетка и звезды */
-  .fullscreen-grid-container {
+  .fullscreen-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -1271,7 +1319,7 @@ const project = formData.get('project')?.trim();
     opacity: 0.5;
   }
   
-  .fullscreen-grid {
+  .fullscreen {
     position: absolute;
     top: 0;
     left: 0;
