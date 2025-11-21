@@ -423,14 +423,23 @@
   .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px}
 
 .portfolio-grid .project img {
+    position: absolute;
+    inset: 0;         /* растягивает картинку на весь блок */
     width: 100%;
-    height: 200px;
+    height: 100%;
     object-fit: cover;
     object-position: center;
-    border-radius: 8px 8px 0 0;
-    margin: -18px -18px 15px -18px;
-    display: block;
+    z-index: 1;
+    border-radius: 0;
+    margin: 0;
 }
+
+.project .meta,
+.project p {
+    position: relative;
+    z-index: 2;
+}
+
 
 /* Убедимся что карточки выглядят правильно */
 .project {
@@ -445,6 +454,8 @@
     justify-content: flex-end;
     min-height: 220px;
 }
+
+
 
   .badges{display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap}
   .badge{
