@@ -1,6 +1,5 @@
 # Secret files
 .env
-*.db
 
 
 # Admin panel
