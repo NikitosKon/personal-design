@@ -424,7 +424,7 @@
 
 .portfolio-grid .project img {
     position: absolute;
-    inset: 0;         /* растягивает картинку на весь блок */
+    inset: 0;         
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -441,13 +441,12 @@
 }
 
 
-/* Убедимся что карточки выглядят правильно */
 .project {
   position: relative;
-  border-radius: 12px;
+  border-radius: 24px;
   overflow: hidden;
   min-height: 220px;
-  background: linear-gradient(135deg, rgba(77,181,255,0.03), rgba(0,0,0,0.03)); /* градиент */
+  background: linear-gradient(135deg, rgba(77,181,255,0.03), rgba(0,0,0,0.03));
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -2032,7 +2031,7 @@ function updatePortfolio(portfolio) {
   
   container.innerHTML = portfolio.map(item => `
     <article class="project reveal" aria-label="${item.title || 'Project'}">
-      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:120px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
+      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:240px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
       <div class="meta">${item.title || 'Project'}</div>
       <p>${item.description || ''}</p>
     </article>
@@ -2150,7 +2149,7 @@ function updatePortfolio(portfolio) {
     <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
              aria-label="${item.title || 'Project'}" 
              style="${index >= 3 ? 'display: none;' : ''}">
-      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:120px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
+      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:240px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
       <div class="meta">${item.title || 'Project'}</div>
       <p>${item.description || ''}</p>
     </article>
