@@ -176,6 +176,29 @@
             margin-top: 10px;
         }
 
+        .upload-btn {
+            background: var(--accent);
+            color: var(--bg-darker);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .image-preview {
+            max-width: 150px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
         .success-message {
             background: var(--accent);
             color: var(--bg-darker);
@@ -193,25 +216,35 @@
             margin-bottom: 15px;
             display: none;
         }
+
+        .upload-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .upload-container .form-input {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <div class="admin-header">
-    <h1 class="admin-title">Админ-панель Personal Design</h1>
-    <div>
-        <button class="nav-btn" onclick="location.href='/admin/'">Сообщения</button>
-        <button class="nav-btn active">Контент</button>
-        <button class="nav-btn" onclick="location.href='/admin/logs.html'">Логи</button>
-        <button class="nav-btn" onclick="logout()">Выйти</button>
-    </div>
-</div>
+            <h1 class="admin-title">Управление контентом</h1>
+            <div>
+                <button class="nav-btn" onclick="location.href='/admin/'">Сообщения</button>
+                <button class="nav-btn active">Контент</button>
+                <button class="nav-btn" onclick="location.href='/admin/logs.html'">Логи</button>
+                <button class="nav-btn" onclick="logout()">Выйти</button>
+            </div>
+        </div>
 
         <div class="admin-nav">
-<button class="nav-btn active" onclick="showSection('hero', this)">Главная</button>
-<button class="nav-btn" onclick="showSection('services', this)">Услуги</button>
-<button class="nav-btn" onclick="showSection('portfolio', this)">Портфолио</button>
-<button class="nav-btn" onclick="showSection('contact', this)">Контакты</button>
+            <button class="nav-btn active" onclick="showSection('hero', this)">Главная</button>
+            <button class="nav-btn" onclick="showSection('services', this)">Услуги</button>
+            <button class="nav-btn" onclick="showSection('portfolio', this)">Портфолио</button>
+            <button class="nav-btn" onclick="showSection('contact', this)">Контакты</button>
         </div>
 
         <div id="successMessage" class="success-message"></div>

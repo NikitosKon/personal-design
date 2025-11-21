@@ -2,7 +2,7 @@ const API_BASE = '/api';
 let currentToken = localStorage.getItem('adminToken');
 let siteContent = {};
 
-// Вспомогательная функция для экранирования HTML (ПЕРЕМЕЩЕНА В НАЧАЛО)
+// Вспомогательная функция для экранирования HTML
 function escapeHtml(unsafe) {
     if (unsafe === null || unsafe === undefined) return '';
     return unsafe.toString()
@@ -22,7 +22,6 @@ if (!currentToken) {
 
 async function checkAuth() {
     try {
-        console.log('Checking authentication...');
         const res = await fetch(`${API_BASE}/admin/verify`, {
             headers: { 'Authorization': `Bearer ${currentToken}` }
         });
@@ -34,7 +33,6 @@ async function checkAuth() {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
         
-        console.log('Authentication successful');
         await loadContent();
     } catch (err) {
         console.error('Auth check failed:', err);
@@ -48,8 +46,6 @@ async function loadContent() {
     siteContent = {};
 
     try {
-        console.log('Loading content for sections:', sections);
-        
         for (let section of sections) {
             const res = await fetch(`${API_BASE}/content/${section}`, {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
@@ -58,9 +54,7 @@ async function loadContent() {
             if (res.ok) {
                 const data = await res.json();
                 siteContent[section] = data;
-                console.log(`✅ Loaded ${section}:`, data.content ? 'has content' : 'empty');
             } else {
-                console.warn(`❌ Failed to load ${section}, status:`, res.status);
                 siteContent[section] = { content: '' };
             }
         }
@@ -73,18 +67,13 @@ async function loadContent() {
 
 // Отображение контента в форме
 function renderContent() {
-    console.log('Rendering content...');
-    
     // Герой секция
-    const heroTitleEl = document.getElementById('hero-title');
-    const heroSubtitleEl = document.getElementById('hero-subtitle');
-    
-    if (heroTitleEl && siteContent.hero_title && siteContent.hero_title.content) {
-        heroTitleEl.value = siteContent.hero_title.content;
+    if (siteContent.hero_title && siteContent.hero_title.content) {
+        document.getElementById('hero-title').value = siteContent.hero_title.content;
     }
     
-    if (heroSubtitleEl && siteContent.hero_subtitle && siteContent.hero_subtitle.content) {
-        heroSubtitleEl.value = siteContent.hero_subtitle.content;
+    if (siteContent.hero_subtitle && siteContent.hero_subtitle.content) {
+        document.getElementById('hero-subtitle').value = siteContent.hero_subtitle.content;
     }
 
     // Услуги
@@ -113,28 +102,19 @@ function renderContent() {
     if (siteContent.contact_info) {
         try {
             const contact = JSON.parse(siteContent.contact_info.content || '{}');
-            const emailEl = document.getElementById('contact-email');
-            const phoneEl = document.getElementById('contact-phone');
-            const addressEl = document.getElementById('contact-address');
-            
-            if (emailEl) emailEl.value = contact.email || '';
-            if (phoneEl) phoneEl.value = contact.phone || '';
-            if (addressEl) addressEl.value = contact.address || '';
+            document.getElementById('contact-email').value = contact.email || '';
+            document.getElementById('contact-phone').value = contact.phone || '';
+            document.getElementById('contact-address').value = contact.address || '';
         } catch (e) {
             console.error('Error parsing contact info:', e);
         }
     }
-    
-    console.log('Content rendered successfully');
 }
 
 // Рендеринг услуг
 function renderServices(services) {
     const container = document.getElementById('services-list');
-    if (!container) {
-        console.error('Services list container not found');
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = '';
     
@@ -172,10 +152,7 @@ function renderServices(services) {
 // Рендеринг портфолио
 function renderPortfolio(portfolio) {
     const container = document.getElementById('portfolio-list');
-    if (!container) {
-        console.error('Portfolio list container not found');
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = '';
     
@@ -192,9 +169,12 @@ function renderPortfolio(portfolio) {
                     <button type="button" class="delete-btn" onclick="deletePortfolioItem(${index})">Удалить</button>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Изображение URL</label>
-                    <input type="text" class="form-input portfolio-image" value="${escapeHtml(item.image || '')}" placeholder="https://example.com/image.jpg">
-                    ${item.image ? `<img src="${item.image}" style="max-width:150px; margin-top:10px; border-radius:4px; border:1px solid var(--border);" onerror="this.style.display='none'">` : ''}
+                    <label class="form-label">Изображение</label>
+                    <div class="upload-container">
+                        <input type="text" class="form-input portfolio-image" value="${escapeHtml(item.image || '')}" placeholder="URL изображения">
+                        <button type="button" class="upload-btn" onclick="uploadPortfolioImage(${index})">Загрузить</button>
+                    </div>
+                    ${item.image ? `<img src="${item.image}" class="image-preview" onerror="this.style.display='none'">` : ''}
                 </div>
                 <div class="form-group">
                     <label class="form-label">Название</label>
@@ -261,26 +241,81 @@ function deletePortfolioItem(index) {
     }
 }
 
+// Загрузка изображения для портфолио
+async function uploadPortfolioImage(index) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const card = document.querySelector(`#portfolio-list .item-card[data-index="${index}"]`);
+        const uploadBtn = card.querySelector('.upload-btn');
+        
+        // Показываем загрузку
+        uploadBtn.textContent = 'Загрузка...';
+        uploadBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${API_BASE}/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentToken}` },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.url) {
+                const imageInput = card.querySelector('.portfolio-image');
+                imageInput.value = data.url;
+                
+                // Показываем превью
+                const existingImg = card.querySelector('.image-preview');
+                if (existingImg) {
+                    existingImg.src = data.url;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = data.url;
+                    img.className = 'image-preview';
+                    imageInput.parentNode.appendChild(img);
+                }
+                
+                showSuccess('Изображение загружено!');
+            } else {
+                throw new Error(data.message || 'Ошибка загрузки');
+            }
+        } catch (err) {
+            console.error('Upload error:', err);
+            showError('Ошибка загрузки изображения: ' + err.message);
+        } finally {
+            uploadBtn.textContent = 'Загрузить';
+            uploadBtn.disabled = false;
+        }
+    };
+
+    fileInput.click();
+}
+
 // Сохранение контента
 async function saveContent(section) {
     let updates = {};
     
     try {
-        console.log(`Saving content for section: ${section}`);
-        
         switch(section) {
             case 'hero':
-                const heroTitle = document.getElementById('hero-title')?.value || '';
-                const heroSubtitle = document.getElementById('hero-subtitle')?.value || '';
-                
                 updates = {
                     hero_title: {
                         title: 'hero_title',
-                        content: heroTitle
+                        content: document.getElementById('hero-title').value
                     },
                     hero_subtitle: {
                         title: 'hero_subtitle', 
-                        content: heroSubtitle
+                        content: document.getElementById('hero-subtitle').value
                     }
                 };
                 break;
@@ -290,9 +325,9 @@ async function saveContent(section) {
                 document.querySelectorAll('#services-list .item-card').forEach((card) => {
                     services.push({
                         id: Date.now() + Math.random(),
-                        title: card.querySelector('.service-title')?.value || '',
-                        description: card.querySelector('.service-desc')?.value || '',
-                        icon: card.querySelector('.service-icon')?.value || 'fas fa-star'
+                        title: card.querySelector('.service-title').value,
+                        description: card.querySelector('.service-desc').value,
+                        icon: card.querySelector('.service-icon').value
                     });
                 });
                 updates = {
@@ -308,9 +343,9 @@ async function saveContent(section) {
                 document.querySelectorAll('#portfolio-list .item-card').forEach((card) => {
                     portfolio.push({
                         id: Date.now() + Math.random(),
-                        title: card.querySelector('.portfolio-title')?.value || '',
-                        description: card.querySelector('.portfolio-desc')?.value || '',
-                        image: card.querySelector('.portfolio-image')?.value || ''
+                        title: card.querySelector('.portfolio-title').value,
+                        description: card.querySelector('.portfolio-desc').value,
+                        image: card.querySelector('.portfolio-image').value
                     });
                 });
                 updates = {
@@ -322,14 +357,14 @@ async function saveContent(section) {
                 break;
                 
             case 'contact':
-                const email = document.getElementById('contact-email')?.value || '';
-                const phone = document.getElementById('contact-phone')?.value || '';
-                const address = document.getElementById('contact-address')?.value || '';
-                
                 updates = {
                     contact_info: {
                         title: 'contact_info',
-                        content: JSON.stringify({ email, phone, address })
+                        content: JSON.stringify({
+                            email: document.getElementById('contact-email').value,
+                            phone: document.getElementById('contact-phone').value,
+                            address: document.getElementById('contact-address').value
+                        })
                     }
                 };
                 break;
@@ -355,14 +390,13 @@ async function saveContent(section) {
         // Проверяем все ответы
         for (let result of results) {
             if (!result.ok) {
-                const errorText = await result.text();
-                throw new Error(`HTTP error! status: ${result.status}, response: ${errorText}`);
+                throw new Error(`HTTP error! status: ${result.status}`);
             }
         }
         
         showSuccess('Контент успешно сохранен!');
         
-        // Перезагружаем контент чтобы убедиться в синхронизации
+        // Перезагружаем контент
         setTimeout(() => loadContent(), 1000);
         
     } catch (err) {
@@ -395,7 +429,6 @@ function showSection(section, button) {
 function showSuccess(msg) {
     let el = document.getElementById('successMessage');
     if (!el) {
-        // Создаем элемент если его нет
         const container = document.querySelector('.admin-container');
         if (container) {
             el = document.createElement('div');
@@ -403,7 +436,6 @@ function showSuccess(msg) {
             el.id = 'successMessage';
             container.insertBefore(el, container.firstChild);
         } else {
-            console.warn('Cannot show success message: container not found');
             return;
         }
     }
@@ -418,7 +450,6 @@ function showSuccess(msg) {
 function showError(msg) {
     let el = document.getElementById('errorMessage');
     if (!el) {
-        // Создаем элемент если его нет
         const container = document.querySelector('.admin-container');
         if (container) {
             el = document.createElement('div');
@@ -426,7 +457,6 @@ function showError(msg) {
             el.id = 'errorMessage';
             container.insertBefore(el, container.firstChild);
         } else {
-            console.warn('Cannot show error message: container not found');
             return;
         }
     }
@@ -445,16 +475,10 @@ function logout() {
 
 // Инициализация интерфейса
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing content manager...');
-    
-    // Показываем первую секцию
     showSection('hero');
     
-    // Активируем первую кнопку
     const firstBtn = document.querySelector('.nav-btn');
     if (firstBtn) {
         firstBtn.classList.add('active');
     }
-    
-    console.log('Content manager initialized');
 });

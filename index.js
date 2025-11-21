@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -23,6 +24,34 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin'));
+app.use('/uploads', express.static('uploads'));
+
+// Настройка multer для загрузки файлов
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // Инициализация базы данных
 const dbPath = path.join(__dirname, 'database.db');
@@ -140,7 +169,6 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
 
-    // Поиск пользователя в базе данных
     db.get(
       'SELECT * FROM admin WHERE username = ?',
       [username],
@@ -154,13 +182,11 @@ app.post('/api/admin/login', async (req, res) => {
           return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Проверка пароля
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
           return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Генерация JWT токена
         const token = jwt.sign(
           { id: user.id, username: user.username },
           JWT_SECRET,
@@ -189,7 +215,6 @@ app.get('/api/admin/verify', authenticateToken, (req, res) => {
 
 // ==================== МАРШРУТЫ СООБЩЕНИЙ ====================
 
-// Получить все сообщения
 app.get('/api/messages', authenticateToken, (req, res) => {
   db.all(
     'SELECT * FROM messages ORDER BY created_at DESC',
@@ -203,7 +228,6 @@ app.get('/api/messages', authenticateToken, (req, res) => {
   );
 });
 
-// Создать новое сообщение
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, project, message } = req.body;
@@ -223,7 +247,6 @@ app.post('/api/contact', async (req, res) => {
           return res.status(500).json({ error: 'Failed to save message' });
         }
 
-        // Логируем получение сообщения
         console.log(`New message from ${name} (${email}): ${project}`);
 
         res.json({ 
@@ -239,7 +262,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-// Обновить статус сообщения
 app.put('/api/messages/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -266,7 +288,6 @@ app.put('/api/messages/:id', authenticateToken, (req, res) => {
   );
 });
 
-// Удалить сообщение
 app.delete('/api/messages/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
@@ -290,11 +311,9 @@ app.delete('/api/messages/:id', authenticateToken, (req, res) => {
 
 // ==================== МАРШРУТЫ КОНТЕНТА ====================
 
-// Получить контент по секции
 app.get('/api/content/:section', authenticateToken, async (req, res) => {
   try {
     const { section } = req.params;
-    console.log('Fetching content for section:', section);
     
     db.get(
       'SELECT * FROM content WHERE title = ?',
@@ -318,19 +337,15 @@ app.get('/api/content/:section', authenticateToken, async (req, res) => {
   }
 });
 
-// Обновить контент
 app.put('/api/content/:section', authenticateToken, async (req, res) => {
   try {
     const { section } = req.params;
     const { title, content } = req.body;
 
-    console.log('Updating content:', { section, title, content });
-
     if (!content) {
       return res.status(400).json({ error: 'Content is required' });
     }
 
-    // Проверяем существует ли запись
     db.get(
       'SELECT * FROM content WHERE title = ?',
       [section],
@@ -341,7 +356,6 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
         }
 
         if (existing) {
-          // Обновляем существующую запись
           db.run(
             'UPDATE content SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE title = ?',
             [content, section],
@@ -354,7 +368,6 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
             }
           );
         } else {
-          // Создаем новую запись
           db.run(
             'INSERT INTO content (title, content) VALUES (?, ?)',
             [section, content],
@@ -375,7 +388,6 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
   }
 });
 
-// Публичный доступ к контенту (для основного сайта)
 app.get('/api/public/content/:section', async (req, res) => {
   try {
     const { section } = req.params;
@@ -402,7 +414,6 @@ app.get('/api/public/content/:section', async (req, res) => {
   }
 });
 
-// Получить весь контент (для отладки)
 app.get('/api/admin/content', authenticateToken, (req, res) => {
   db.all(
     'SELECT * FROM content ORDER BY title',
@@ -418,73 +429,57 @@ app.get('/api/admin/content', authenticateToken, (req, res) => {
 
 // ==================== МАРШРУТЫ ДЛЯ ЗАГРУЗКИ ФАЙЛОВ ====================
 
-// Создаем папку для загрузок если её нет
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No file uploaded' 
+      });
+    }
 
-app.use('/uploads', express.static(uploadsDir));
-
-app.post('/api/upload', authenticateToken, (req, res) => {
-  // Здесь должна быть реализация загрузки файлов
-  // Пока возвращаем заглушку
-  res.json({ 
-    success: false, 
-    message: 'File upload not implemented yet',
-    url: '' 
-  });
-});
-
-// ==================== СИСТЕМНЫЕ МАРШРУТЫ ====================
-
-// Получить логи системы
-app.get('/api/admin/logs', authenticateToken, (req, res) => {
-  // Здесь должна быть реализация получения логов
-  // Пока возвращаем заглушку
-  res.json({
-    serverInfo: {
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage()
-    },
-    messages: [],
-    system: []
-  });
+    const fileUrl = `/uploads/${req.file.filename}`;
+    
+    res.json({ 
+      success: true, 
+      message: 'File uploaded successfully',
+      url: fileUrl,
+      filename: req.file.filename
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'File upload failed' 
+    });
+  }
 });
 
 // ==================== ОСНОВНЫЕ МАРШРУТЫ ====================
 
-// Главная страница
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Админка
 app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
 
-// Обработка 404
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Обработка ошибок
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Запуск сервера
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Main site: http://localhost:${PORT}`);
   console.log(`Admin panel: http://localhost:${PORT}/admin`);
-  console.log('Press Ctrl+C to stop the server');
 });
 
-// Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\nShutting down server...');
   db.close((err) => {
