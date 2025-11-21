@@ -1596,6 +1596,111 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+<script>
+// Загрузка динамического контента
+async function loadDynamicContent() {
+  try {
+    // Загружаем контент героя
+    const [heroTitleRes, heroSubtitleRes, servicesRes, portfolioRes, contactRes] = await Promise.all([
+      fetch('/api/content/hero_title'),
+      fetch('/api/content/hero_subtitle'),
+      fetch('/api/content/services'),
+      fetch('/api/content/portfolio'),
+      fetch('/api/content/contact_info')
+    ]);
+
+    const heroTitle = await heroTitleRes.json();
+    const heroSubtitle = await heroSubtitleRes.json();
+    const services = await servicesRes.json();
+    const portfolio = await portfolioRes.json();
+    const contact = await contactRes.json();
+
+    // Обновляем контент на странице
+    if (heroTitle.content) {
+      document.getElementById('hero-heading').textContent = heroTitle.content;
+    }
+    
+    if (heroSubtitle.content) {
+      document.querySelector('.hero-sub').textContent = heroSubtitle.content;
+    }
+
+    // Обновляем услуги
+    if (services.content) {
+      const servicesData = JSON.parse(services.content);
+      updateServices(servicesData);
+    }
+
+    // Обновляем портфолио
+    if (portfolio.content) {
+      const portfolioData = JSON.parse(portfolio.content);
+      updatePortfolio(portfolioData);
+    }
+
+    // Обновляем контакты
+    if (contact.content) {
+      const contactData = JSON.parse(contact.content);
+      updateContactInfo(contactData);
+    }
+
+  } catch (error) {
+    console.error('Error loading dynamic content:', error);
+  }
+}
+
+function updateServices(services) {
+  const container = document.querySelector('.services-grid');
+  if (!container || services.length === 0) return;
+
+  container.innerHTML = services.map(service => `
+    <div class="service reveal">
+      <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
+      <h4>${service.title || 'Service'}</h4>
+      <p>${service.description || ''}</p>
+    </div>
+  `).join('');
+}
+
+function updatePortfolio(portfolio) {
+  const container = document.querySelector('.portfolio-grid');
+  if (!container || portfolio.length === 0) return;
+
+  container.innerHTML = portfolio.map(item => `
+    <article class="project reveal" aria-label="${item.title || 'Project'}">
+      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:120px;object-fit:cover;margin-bottom:10px;border-radius:8px;">` : ''}
+      <div class="meta">${item.title || 'Project'}</div>
+      <p>${item.description || ''}</p>
+    </article>
+  `).join('');
+}
+
+function updateContactInfo(contact) {
+  if (contact.email) {
+    const emailLink = document.querySelector('a[href^="mailto:"]');
+    if (emailLink) {
+      emailLink.href = `mailto:${contact.email}`;
+      emailLink.textContent = contact.email;
+    }
+  }
+  
+  if (contact.phone) {
+    const phoneElement = document.querySelector('p:has(.fa-phone) span');
+    if (phoneElement) {
+      phoneElement.textContent = contact.phone;
+    }
+  }
+  
+  if (contact.address) {
+    const addressElement = document.querySelector('p:has(.fa-map-marker-alt) span');
+    if (addressElement) {
+      addressElement.textContent = contact.address;
+    }
+  }
+}
+
+// Загружаем контент при загрузке страницы
+document.addEventListener('DOMContentLoaded', loadDynamicContent);
+</script>
+
 
 </body>
 </html>

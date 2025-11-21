@@ -1,216 +1,483 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import sqlite3 from 'sqlite3';
+import path from 'path';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import dotenv from 'dotenv';
-import multer from 'multer';
-import path from 'path';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// ES модули не имеют __dirname, поэтому создаем его
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(join(__dirname, './public')));
-app.use('/admin', express.static(join(__dirname, './admin')));
-
-// Multer для загрузки файлов
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage });
-app.use('/uploads', express.static('uploads'));
-
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
-  res.json({ url: `/uploads/${req.file.filename}` });
-});
+app.use(express.static('public'));
+app.use('/admin', express.static('admin'));
 
 // Инициализация базы данных
-const db = new sqlite3.Database('./database.db');
+const dbPath = path.join(__dirname, 'database.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Error opening database:', err.message);
+  } else {
+    console.log('Connected to SQLite database.');
+    
+    // Создаем таблицу сообщений
+    db.run(`CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      project_type TEXT NOT NULL,
+      message TEXT,
+      status TEXT DEFAULT 'new',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    // Создаем таблицу контента
+    db.run(`CREATE TABLE IF NOT EXISTS content (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT UNIQUE NOT NULL,
+      content TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`, (err) => {
+      if (err) {
+        console.error('Error creating content table:', err);
+      } else {
+        console.log('Content table ready');
+        
+        // Начальные данные
+        const initialContent = [
+          { title: 'hero_title', content: 'We craft premium logos, posters, social content, promo videos & 3D visuals.' },
+          { title: 'hero_subtitle', content: 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.' },
+          { title: 'services', content: '[]' },
+          { title: 'portfolio', content: '[]' },
+          { title: 'contact_info', content: '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}' }
+        ];
 
-db.serialize(() => {
-  // Таблицы
-  db.run(`CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    project_type TEXT NOT NULL,
-    message TEXT,
-    status TEXT DEFAULT 'new',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+        initialContent.forEach(item => {
+          db.run(
+            'INSERT OR IGNORE INTO content (title, content) VALUES (?, ?)',
+            [item.title, item.content]
+          );
+        });
+      }
+    });
 
-  db.run(`CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-  )`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS site_content (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    section TEXT UNIQUE NOT NULL,
-    title TEXT,
-    content TEXT,
-    image_url TEXT,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-
-  // Админы
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const admin2Password = process.env.ADMIN2_PASSWORD;
-
-  if (!adminPassword) {
-    console.error('❌ ADMIN_PASSWORD не установлен');
-    process.exit(1);
+    // Создаем таблицу администраторов
+    db.run(`CREATE TABLE IF NOT EXISTS admin (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`, (err) => {
+      if (err) {
+        console.error('Error creating admin table:', err);
+      } else {
+        console.log('Admin table ready');
+        
+        // Создаем администратора по умолчанию
+        const defaultPassword = bcrypt.hashSync('admin123', 10);
+        db.run(
+          'INSERT OR IGNORE INTO admin (username, password) VALUES (?, ?)',
+          ['admin', defaultPassword]
+        );
+      }
+    });
   }
-
-  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
-  const hashedPassword2 = bcrypt.hashSync(admin2Password || 'thklty13', 10);
-
-  db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin', hashedPassword]);
-  db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin2', hashedPassword2]);
-
-  // Инициализация секций контента (если их ещё нет)
-  const sections = ['hero_title', 'hero_subtitle', 'services', 'portfolio', 'contact_info'];
-  sections.forEach(sec => {
-    db.run(
-      `INSERT OR IGNORE INTO site_content (section, title, content) VALUES (?, ?, ?)`,
-      [sec, sec, (sec === 'services' || sec === 'portfolio') ? '[]' : '{}']
-    );
-  });
 });
 
-// JWT Middleware
-const authenticateToken = (req, res, next) => {
+// Middleware для аутентификации
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Токен доступа отсутствует' });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Неверный токен' });
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
     req.user = user;
     next();
   });
-};
+}
 
-// ================= API =================
+// ==================== МАРШРУТЫ АУТЕНТИФИКАЦИИ ====================
 
-// Contact
-app.post('/api/contact', (req, res) => {
-  const { name, email, project, message } = req.body;
-  if (!name || !email || !project) return res.status(400).json({ error: 'Заполните обязательные поля' });
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
-  db.run(
-    `INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)`,
-    [name, email, project, message],
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Ошибка при сохранении сообщения' });
-      res.json({ success: true, message: 'Сообщение успешно отправлено!', id: this.lastID });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
     }
-  );
-});
 
-// Messages
-app.get('/api/messages', authenticateToken, (req, res) => {
-  db.all(`SELECT * FROM messages ORDER BY created_at DESC`, (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Ошибка при получении сообщений' });
-    res.json(rows);
-  });
-});
+    // Поиск пользователя в базе данных
+    db.get(
+      'SELECT * FROM admin WHERE username = ?',
+      [username],
+      async (err, user) => {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
 
-app.put('/api/messages/:id', authenticateToken, (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  db.run(`UPDATE messages SET status = ? WHERE id = ?`, [status, id], function(err) {
-    if (err) return res.status(500).json({ error: 'Ошибка при обновлении сообщения' });
-    res.json({ success: true, message: 'Статус обновлен' });
-  });
-});
+        if (!user) {
+          return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-app.delete('/api/messages/:id', authenticateToken, (req, res) => {
-  const { id } = req.params;
-  db.run(`DELETE FROM messages WHERE id = ?`, [id], function(err) {
-    if (err) return res.status(500).json({ error: 'Ошибка при удалении сообщения' });
-    res.json({ success: true, message: 'Сообщение удалено' });
-  });
-});
+        // Проверка пароля
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+          return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-// Admin login
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  db.get(`SELECT * FROM admins WHERE username = ?`, [username], (err, admin) => {
-    if (err || !admin) return res.status(401).json({ error: 'Неверные учетные данные' });
+        // Генерация JWT токена
+        const token = jwt.sign(
+          { id: user.id, username: user.username },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
 
-    if (bcrypt.compareSync(password, admin.password)) {
-      const token = jwt.sign({ id: admin.id, username: admin.username }, process.env.JWT_SECRET, { expiresIn: '24h' });
-      res.json({ success: true, token });
-    } else {
-      res.status(401).json({ error: 'Неверные учетные данные' });
-    }
-  });
+        res.json({
+          success: true,
+          token,
+          user: { id: user.id, username: user.username }
+        });
+      }
+    );
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 app.get('/api/admin/verify', authenticateToken, (req, res) => {
-  res.json({ success: true, user: req.user });
-});
-
-// Контент
-app.get('/api/content', authenticateToken, (req, res) => {
-  db.all(`SELECT * FROM site_content`, (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Ошибка при получении контента' });
-    res.json(rows);
+  res.json({ 
+    success: true, 
+    user: { id: req.user.id, username: req.user.username } 
   });
 });
 
-app.get('/api/content/:section', authenticateToken, (req, res) => {
-  const { section } = req.params;
-  db.get(`SELECT * FROM site_content WHERE section = ?`, [section], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ error: 'Секция не найдена' });
-    res.json(row);
-  });
-});
+// ==================== МАРШРУТЫ СООБЩЕНИЙ ====================
 
-app.put('/api/content/:section', authenticateToken, (req, res) => {
-  const { section } = req.params;
-  const { title, content } = req.body;
-  db.run(
-    `UPDATE site_content SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE section = ?`,
-    [title, content, section],
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Ошибка при обновлении контента' });
-      res.json({ success: true, message: 'Контент обновлен' });
+// Получить все сообщения
+app.get('/api/messages', authenticateToken, (req, res) => {
+  db.all(
+    'SELECT * FROM messages ORDER BY created_at DESC',
+    (err, rows) => {
+      if (err) {
+        console.error('Error fetching messages:', err);
+        return res.status(500).json({ error: 'Failed to fetch messages' });
+      }
+      res.json(rows);
     }
   );
 });
 
-// Публичный контент
-app.get('/api/public/content', (req, res) => {
-  db.all(`SELECT section, content FROM site_content`, (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Ошибка при получении контента' });
+// Создать новое сообщение
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, project, message } = req.body;
 
-    const content = {};
-    rows.forEach(row => {
-      try { content[row.section] = JSON.parse(row.content); }
-      catch { content[row.section] = row.content; }
-    });
-    res.json(content);
+    if (!name || !email || !project) {
+      return res.status(400).json({ 
+        error: 'Name, email and project type are required' 
+      });
+    }
+
+    db.run(
+      'INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)',
+      [name, email, project, message || ''],
+      function(err) {
+        if (err) {
+          console.error('Error saving message:', err);
+          return res.status(500).json({ error: 'Failed to save message' });
+        }
+
+        // Логируем получение сообщения
+        console.log(`New message from ${name} (${email}): ${project}`);
+
+        res.json({ 
+          success: true, 
+          message: 'Message sent successfully',
+          id: this.lastID 
+        });
+      }
+    );
+  } catch (error) {
+    console.error('Contact form error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Обновить статус сообщения
+app.put('/api/messages/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ error: 'Status is required' });
+  }
+
+  db.run(
+    'UPDATE messages SET status = ? WHERE id = ?',
+    [status, id],
+    function(err) {
+      if (err) {
+        console.error('Error updating message:', err);
+        return res.status(500).json({ error: 'Failed to update message' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+
+      res.json({ success: true, message: 'Message updated' });
+    }
+  );
+});
+
+// Удалить сообщение
+app.delete('/api/messages/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  db.run(
+    'DELETE FROM messages WHERE id = ?',
+    [id],
+    function(err) {
+      if (err) {
+        console.error('Error deleting message:', err);
+        return res.status(500).json({ error: 'Failed to delete message' });
+      }
+
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+
+      res.json({ success: true, message: 'Message deleted' });
+    }
+  );
+});
+
+// ==================== МАРШРУТЫ КОНТЕНТА ====================
+
+// Получить контент по секции
+app.get('/api/content/:section', authenticateToken, async (req, res) => {
+  try {
+    const { section } = req.params;
+    console.log('Fetching content for section:', section);
+    
+    db.get(
+      'SELECT * FROM content WHERE title = ?',
+      [section],
+      (err, content) => {
+        if (err) {
+          console.error('Error fetching content:', err);
+          return res.status(500).json({ error: 'Failed to fetch content' });
+        }
+        
+        if (content) {
+          res.json(content);
+        } else {
+          res.json({ content: '' });
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error in content route:', error);
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
+});
+
+// Обновить контент
+app.put('/api/content/:section', authenticateToken, async (req, res) => {
+  try {
+    const { section } = req.params;
+    const { title, content } = req.body;
+
+    console.log('Updating content:', { section, title, content });
+
+    if (!content) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    // Проверяем существует ли запись
+    db.get(
+      'SELECT * FROM content WHERE title = ?',
+      [section],
+      (err, existing) => {
+        if (err) {
+          console.error('Error checking existing content:', err);
+          return res.status(500).json({ error: 'Failed to update content' });
+        }
+
+        if (existing) {
+          // Обновляем существующую запись
+          db.run(
+            'UPDATE content SET content = ?, updated_at = CURRENT_TIMESTAMP WHERE title = ?',
+            [content, section],
+            function(err) {
+              if (err) {
+                console.error('Error updating content:', err);
+                return res.status(500).json({ error: 'Failed to update content' });
+              }
+              res.json({ success: true });
+            }
+          );
+        } else {
+          // Создаем новую запись
+          db.run(
+            'INSERT INTO content (title, content) VALUES (?, ?)',
+            [section, content],
+            function(err) {
+              if (err) {
+                console.error('Error creating content:', err);
+                return res.status(500).json({ error: 'Failed to create content' });
+              }
+              res.json({ success: true });
+            }
+          );
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error updating content:', error);
+    res.status(500).json({ error: 'Failed to update content' });
+  }
+});
+
+// Публичный доступ к контенту (для основного сайта)
+app.get('/api/public/content/:section', async (req, res) => {
+  try {
+    const { section } = req.params;
+    
+    db.get(
+      'SELECT * FROM content WHERE title = ?',
+      [section],
+      (err, content) => {
+        if (err) {
+          console.error('Error fetching public content:', err);
+          return res.status(500).json({ error: 'Failed to fetch content' });
+        }
+        
+        if (content) {
+          res.json(content);
+        } else {
+          res.json({ content: '' });
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error in public content route:', error);
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
+});
+
+// Получить весь контент (для отладки)
+app.get('/api/admin/content', authenticateToken, (req, res) => {
+  db.all(
+    'SELECT * FROM content ORDER BY title',
+    (err, rows) => {
+      if (err) {
+        console.error('Error fetching all content:', err);
+        return res.status(500).json({ error: 'Failed to fetch content' });
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// ==================== МАРШРУТЫ ДЛЯ ЗАГРУЗКИ ФАЙЛОВ ====================
+
+// Создаем папку для загрузок если её нет
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir));
+
+app.post('/api/upload', authenticateToken, (req, res) => {
+  // Здесь должна быть реализация загрузки файлов
+  // Пока возвращаем заглушку
+  res.json({ 
+    success: false, 
+    message: 'File upload not implemented yet',
+    url: '' 
   });
 });
 
-// ================= Запуск сервера =================
+// ==================== СИСТЕМНЫЕ МАРШРУТЫ ====================
+
+// Получить логи системы
+app.get('/api/admin/logs', authenticateToken, (req, res) => {
+  // Здесь должна быть реализация получения логов
+  // Пока возвращаем заглушку
+  res.json({
+    serverInfo: {
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    },
+    messages: [],
+    system: []
+  });
+});
+
+// ==================== ОСНОВНЫЕ МАРШРУТЫ ====================
+
+// Главная страница
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Админка
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
+
+// Обработка 404
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Обработка ошибок
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Запуск сервера
 app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
-  console.log(`Основной сайт: http://localhost:${PORT}`);
-  console.log(`Админ-панель: http://localhost:${PORT}/admin`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Main site: http://localhost:${PORT}`);
+  console.log(`Admin panel: http://localhost:${PORT}/admin`);
+  console.log('Press Ctrl+C to stop the server');
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\nShutting down server...');
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing database:', err);
+    } else {
+      console.log('Database connection closed.');
+    }
+    process.exit(0);
+  });
 });
