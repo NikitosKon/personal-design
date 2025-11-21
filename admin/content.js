@@ -113,6 +113,14 @@ function renderPortfolio(portfolio) {
                     <h3>Работа ${index + 1}</h3>
                     <button class="delete-btn" onclick="deletePortfolioItem(${index})">Удалить</button>
                 </div>
+
+<div class="form-group">
+    <label class="form-label">Изображение</label>
+    <input type="file" class="form-input portfolio-image" accept="image/*" onchange="uploadPortfolioImage(this, ${index})">
+    ${item.image ? `<img src="${item.image}" style="margin-top:10px; max-width:150px;">` : ''}
+</div>
+
+
                 <div class="form-group">
                     <label class="form-label">Название проекта</label>
                     <input type="text" class="form-input portfolio-title" value="${item.title || ''}" placeholder="Название проекта">
@@ -143,10 +151,12 @@ function addPortfolioItem() {
     portfolio.push({
         id: Date.now(),
         title: '',
-        description: ''
+        description: '',
+        image: '' // поле для URL изображения
     });
     renderPortfolio(portfolio);
 }
+
 
 function deleteService(index) {
     const services = JSON.parse(siteContent.services?.content || '[]');
@@ -188,10 +198,12 @@ function saveContent(section) {
             document.querySelectorAll('#portfolio-list .item-card').forEach(card => {
                 const index = card.dataset.index;
                 portfolio.push({
-                    id: JSON.parse(siteContent.portfolio?.content || '[]')[index]?.id || Date.now(),
-                    title: card.querySelector('.portfolio-title').value,
-                    description: card.querySelector('.portfolio-desc').value
-                });
+    id: JSON.parse(siteContent.portfolio?.content || '[]')[index]?.id || Date.now(),
+    title: card.querySelector('.portfolio-title').value,
+    description: card.querySelector('.portfolio-desc').value,
+    image: card.querySelector('.portfolio-image').value
+});
+
             });
             contentData = { portfolio: JSON.stringify(portfolio) };
             break;
@@ -275,3 +287,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Активируем первую кнопку
     document.querySelector('.nav-btn').classList.add('active');
 });
+
+function uploadPortfolioImage(input, index) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${currentToken}`
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.url) {
+            // ставим URL в текстовое поле
+            const card = document.querySelector(`#portfolio-list .item-card[data-index="${index}"]`);
+            card.querySelector('.portfolio-image').value = data.url;
+        } else {
+            showError('Ошибка загрузки изображения');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showError('Ошибка загрузки изображения');
+    });
+}

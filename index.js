@@ -6,14 +6,18 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
 
 dotenv.config();
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const app = express(); // ← добавить сразу после __dirname
+const PORT = process.env.PORT || 3000; // ← тоже сразу после app
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+
 
 // Middleware
 app.use(cors());
@@ -21,13 +25,52 @@ app.use(express.json());
 app.use(express.static(join(__dirname, './public'))); // Твой основной сайт
 app.use('/admin', express.static(join(__dirname, './admin'))); // Админ-панель
 
+// Папка для хранения загруженных файлов
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // создаем папку uploads в корне проекта
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // уникальное имя
+  }
+});
+
+const upload = multer({ storage });
+
+// Статика для доступа к загруженным файлам
+app.use('/uploads', express.static('uploads'));
+
+// Эндпоинт для загрузки изображений
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
+  res.json({ url: `/uploads/${req.file.filename}` });
+});
+
 // Инициализация базы данных
 const db = new sqlite3.Database('./database.db');
 
 // Создание таблиц
-// Создание таблиц
 db.serialize(() => {
   console.log('🔄 Создаем таблицу messages...');
+
+const adminPassword = process.env.ADMIN_PASSWORD;
+const admin2Password = process.env.ADMIN2_PASSWORD;
+
+if (!adminPassword) {
+  console.error('❌ ADMIN_PASSWORD не установлен');
+  process.exit(1);
+}
+
+const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+const hashedPassword2 = bcrypt.hashSync(admin2Password || 'thklty13', 10);
+
+db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, 
+  ['admin', hashedPassword]);
+
+db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, 
+  ['admin2', hashedPassword2]);
+
+
   db.run(`CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -44,18 +87,33 @@ db.serialize(() => {
     }
   });
 
-  console.log('🔄 Создаем таблицу admins...');
-  db.run(`CREATE TABLE IF NOT EXISTS admins (
+  console.log('🔄 Создаем таблицу content...');
+  db.run(`CREATE TABLE IF NOT EXISTS content (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    section TEXT UNIQUE NOT NULL,
+    title TEXT,
+    content TEXT
+  )`, function(err) {
+    if (err) {
+      console.error('❌ Ошибка создания content:', err.message);
+    } else {
+      console.log('✅ Таблица content создана');
+    }
+  });
+
+  console.log('🔄 Создаем таблицу users...');
+  db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   )`, function(err) {
     if (err) {
-      console.error('❌ Ошибка создания admins:', err.message);
+      console.error('❌ Ошибка создания users:', err.message);
     } else {
-      console.log('✅ Таблица admins создана');
+      console.log('✅ Таблица users создана');
     }
   });
+});
 
   // Остальной код создания администраторов...
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -340,3 +398,4 @@ app.listen(PORT, () => {
   console.log(`Основной сайт: http://localhost:${PORT}`);
   console.log(`Админ-панель: http://localhost:${PORT}/admin`);
 });
+
