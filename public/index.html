@@ -443,16 +443,30 @@
 
 /* Убедимся что карточки выглядят правильно */
 .project {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    padding: 18px;
-    background: linear-gradient(135deg, rgba(77,181,255,0.03), rgba(0,0,0,0.03));
-    border: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-height: 220px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 220px;
+  background: linear-gradient(135deg, rgba(77,181,255,0.03), rgba(0,0,0,0.03)); /* градиент */
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.project-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.project-content {
+  position: relative;
+  z-index: 2;
+  padding: 18px;
+  color: var(--text);
 }
 
 
@@ -690,17 +704,25 @@
   </div>
 
   <div class="portfolio-grid">
-    <article class="project reveal" aria-label="Logo for CoffeeHub">
+  <article class="project reveal" aria-label="Logo for CoffeeHub">
+    <!-- Фоновая картинка проекта -->
+    <div class="project-bg" style="background-image: url('URL_проекта');"></div>
+
+    <!-- Контент проекта -->
+    <div class="project-content">
       <div class="meta">Logo for CoffeeHub</div>
       <p>Modern mark — applied across packaging and web.</p>
-    </article>
+    </div>
+  </article>
 
-         <article class="project reveal" aria-label="Restaurant Menu">
+  <article class="project reveal" aria-label="Restaurant Menu">
+    <div class="project-bg" style="background-image: url('URL_проекта');"></div>
+    <div class="project-content">
       <div class="meta">Restaurant Menu</div>
       <p>Clean layout focused on appetite and conversion.</p>
-    </article>
-
-        <article class="project reveal" aria-label="Instagram Campaign">
+    </div>
+  </article>
+  <article class="project reveal" aria-label="Instagram Campaign">
       <div class="meta">Instagram Campaign</div>
       <p>Coherent visual system for multi-platform ads and posts.</p>
     </article>
