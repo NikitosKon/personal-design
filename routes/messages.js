@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const router = express.Router();
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'change_this_secret_in_env';
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'secret';
 
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization;

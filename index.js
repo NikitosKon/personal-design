@@ -138,6 +138,9 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin'));
 app.use('/uploads', express.static('uploads'));
+app.use('/api/upload', uploadRoutes);
+app.use('/api/messages', messagesRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Multer
 const storage = multer.diskStorage({

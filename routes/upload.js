@@ -8,7 +8,7 @@ import path from 'path';
 dotenv.config();
 
 const router = express.Router();
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'change_this_secret_in_env';
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'secret';
 
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
