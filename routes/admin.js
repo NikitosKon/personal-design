@@ -15,15 +15,17 @@ router.post('/login', async (req, res) => {
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
   try {
-    const [rows] = await db.execute('SELECT * FROM admin WHERE username = ?', [username]);
+    // ИСПРАВЛЕНО: admins вместо admin
+    const [rows] = await db.execute('SELECT * FROM admins WHERE username = ?', [username]);
     if (!rows || rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
 
     const admin = rows[0];
-    const ok = await bcrypt.compare(password, admin.password);
+    // ИСПРАВЛЕНО: password_hash вместо password
+    const ok = await bcrypt.compare(password, admin.password_hash);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign({ sub: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES });
-    res.json({ token });
+    res.json({ success: true, token }); // Добавь success: true для фронтенда
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
