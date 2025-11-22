@@ -1,12 +1,12 @@
 import express from 'express';
 import { db } from '../database.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const router = express.Router();
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const TOKEN_EXPIRES = '8h';
 
 // POST /api/admin/login
