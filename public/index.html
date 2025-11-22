@@ -559,19 +559,116 @@
     .contact-grid{grid-template-columns:1fr}
   }
   @media (max-width:760px){
-    header.nav{top:8px}
-    .nav-inner{padding:8px}
-    .hero{padding:64px 0 40px}
-    .hero-title{font-size:30px}
-    .features, .services-grid, .portfolio-grid{grid-template-columns:1fr}
-    .brand .logo{width:46px;height:46px;font-size:18px}
-    .social-icons { display: none; }
-    .hero-social-icon {
-      width: 44px;
-      height: 44px;
-      font-size: 18px;
-    }
+  :root {
+    --nav-h: 60px; /* Уменьшаем высоту на мобильных */
   }
+  
+  header.nav {
+    top: 8px;
+  }
+  
+  .nav-inner {
+    padding: 6px 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .brand {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+  }
+  
+  .brand .logo {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .brand > div {
+    min-width: 0;
+  }
+  
+  .brand > div > div:first-child {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  
+  .brand > div > div:last-child {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  
+  /* Компактное меню навигации */
+  nav ul {
+    gap: 8px;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .nav-link {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  
+  /* Кнопка CTA и соцсети */
+  .nav-cta {
+    padding: 8px 12px;
+    font-size: 12px;
+    order: 2;
+  }
+  
+  .social-icons {
+    display: none; /* Скрываем соцсети в навигации на мобильных */
+  }
+  
+  /* Остальные существующие стили */
+  .hero {
+    padding: 50px 0 30px;
+  }
+  
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  .features, .services-grid, .portfolio-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .hero-social-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}
+
+/* Дополнительные улучшения для очень маленьких экранов */
+@media (max-width: 480px) {
+  .nav-inner {
+    padding: 4px 8px;
+  }
+  
+  nav ul {
+    gap: 6px;
+  }
+  
+  .nav-link {
+    font-size: 11px;
+    padding: 5px 6px;
+  }
+  
+  .brand > div > div:first-child {
+    font-size: 13px;
+  }
+  
+  .brand > div > div:last-child {
+    font-size: 9px;
+  }
+}
   @media (prefers-reduced-motion: reduce){
     *{transition:none!important;animation:none!important}
     .reveal{transition:none;transform:none;opacity:1}
