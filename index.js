@@ -17,6 +17,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Добавь в начало index.js для диагностики
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+
 // MySQL connection
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
@@ -170,10 +173,22 @@ app.post('/api/contact', async (req, res) => {
 // Content
 app.get('/api/content/:section', authenticateToken, async (req, res) => {
   try {
+    console.log('Fetching content for:', req.params.section);
     const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+    console.log('Query result:', rows);
     res.json(rows[0] || { content: '' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch content' });
+    console.error('Content fetch error:', error);
+    res.status(500).json({ error: 'Database error: ' + error.message });
+  }
+});
+
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT 1 as test');
+    res.json({ success: true, database: 'MySQL connected', test: rows[0] });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
   }
 });
 
