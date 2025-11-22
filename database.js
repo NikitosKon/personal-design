@@ -20,7 +20,6 @@ export async function getPool() {
     decimalNumbers: true
   };
 
-  // Если есть DATABASE_URL, парсим его
   if (process.env.DATABASE_URL) {
     try {
       const url = new URL(process.env.DATABASE_URL);
@@ -66,8 +65,8 @@ export async function initDatabase() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS content (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      key_name VARCHAR(200) NOT NULL UNIQUE,
-      value TEXT,
+      title VARCHAR(200) NOT NULL UNIQUE,
+      content TEXT,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
@@ -90,30 +89,11 @@ export async function initDatabase() {
   ];
 
   for (const [key, value] of defaultContent) {
-    await db.execute(`
-  CREATE TABLE IF NOT EXISTS content (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL UNIQUE,
-    content TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-`);
-
-// Добавляем дефолтный контент
-const defaultContent = [
-  ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
-  ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
-  ['services', '[]'],
-  ['portfolio', '[]'],
-  ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
-];
-
-for (const [key, value] of defaultContent) {
-  await db.execute(
-    'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
-    [key, value]
-  );
-}
+    await db.execute(
+      'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
+      [key, value]
+    );
+  }
 
   console.log('✅ Database initialized');
 }
