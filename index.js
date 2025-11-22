@@ -1,12 +1,13 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import path from 'path';
+import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
-import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -16,21 +17,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// In-memory storage (простая замена SQLite)
-let messages = [];
-let content = {};
-let admins = [{ id: 1, username: 'admin', password: bcrypt.hashSync('admin123', 10) }];
-
-// Default content
-const defaultContent = {
-  hero_title: 'We craft premium logos, posters, social content, promo videos & 3D visuals.',
-  hero_subtitle: 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.',
-  services: '[]',
-  portfolio: '[]',
-  contact_info: '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}'
-};
-
-Object.assign(content, defaultContent);
+// MySQL connection
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  connectionLimit: 10
+});
 
 // Middleware
 app.use(cors());
@@ -48,6 +39,71 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Init Database
+async function initDatabase() {
+  try {
+    console.log('🔧 Initializing MySQL database...');
+    
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        project_type VARCHAR(255) NOT NULL,
+        message TEXT,
+        status VARCHAR(50) DEFAULT 'new',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS content (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) UNIQUE NOT NULL,
+        content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS admin (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Default content
+    const defaultContent = [
+      ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
+      ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
+      ['services', '[]'],
+      ['portfolio', '[]'],
+      ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
+    ];
+
+    for (const [title, content] of defaultContent) {
+      await pool.execute(
+        'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
+        [title, content]
+      );
+    }
+
+    // Default admin
+    const hash = bcrypt.hashSync('admin123', 10);
+    await pool.execute(
+      'INSERT IGNORE INTO admin (username, password) VALUES (?, ?)',
+      ['admin', hash]
+    );
+
+    console.log('✅ MySQL database initialized');
+  } catch (error) {
+    console.error('❌ Database init error:', error);
+  }
+}
+
 // Auth middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -62,102 +118,97 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
-  const user = admins.find(a => a.username === username);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const [rows] = await pool.execute('SELECT * FROM admin WHERE username = ?', [username]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
     
-  const valid = bcrypt.compareSync(password, user.password);
-  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    const user = rows[0];
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-  const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
-  res.json({ success: true, token, user: { id: user.id, username: user.username } });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token, user: { id: user.id, username: user.username } });
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
 });
 
 app.get('/api/admin/verify', authenticateToken, (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-app.post('/api/admin/create', authenticateToken, async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
-
-  const hash = bcrypt.hashSync(password, 10);
-  const existingIndex = admins.findIndex(a => a.username === username);
-  
-  if (existingIndex >= 0) {
-    admins[existingIndex].password = hash;
-  } else {
-    admins.push({ id: Date.now(), username, password: hash });
-  }
-  
-  res.json({ success: true, message: 'Admin created', username });
-});
-
 // Messages
-app.get('/api/messages', authenticateToken, (req, res) => {
-  res.json(messages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+app.get('/api/messages', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM messages ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
 });
 
-app.post('/api/contact', (req, res) => {
-  const { name, email, project, message } = req.body;
-  if (!name || !email || !project) return res.status(400).json({ error: 'Name, email and project required' });
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, project, message } = req.body;
+    if (!name || !email || !project) return res.status(400).json({ error: 'Name, email and project required' });
 
-  const newMessage = {
-    id: Date.now(),
-    name,
-    email, 
-    project_type: project,
-    message: message || '',
-    status: 'new',
-    created_at: new Date().toISOString()
-  };
-  
-  messages.push(newMessage);
-  res.json({ success: true, message: 'Message sent', id: newMessage.id });
-});
+    const [result] = await pool.execute(
+      'INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)',
+      [name, email, project, message || '']
+    );
 
-app.put('/api/messages/:id', authenticateToken, (req, res) => {
-  const { status } = req.body;
-  if (!status) return res.status(400).json({ error: 'Status required' });
-
-  const message = messages.find(m => m.id == req.params.id);
-  if (!message) return res.status(404).json({ error: 'Message not found' });
-  
-  message.status = status;
-  res.json({ success: true, message: 'Message updated' });
-});
-
-app.delete('/api/messages/:id', authenticateToken, (req, res) => {
-  const index = messages.findIndex(m => m.id == req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Message not found' });
-  
-  messages.splice(index, 1);
-  res.json({ success: true, message: 'Message deleted' });
+    res.json({ success: true, message: 'Message sent', id: result.insertId });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to save message' });
+  }
 });
 
 // Content
-app.get('/api/content/:section', authenticateToken, (req, res) => {
-  res.json({ content: content[req.params.section] || '' });
+app.get('/api/content/:section', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+    res.json(rows[0] || { content: '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
 });
 
-app.put('/api/content/:section', authenticateToken, (req, res) => {
-  const { content: newContent } = req.body;
-  if (!newContent) return res.status(400).json({ error: 'Content required' });
+app.put('/api/content/:section', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ error: 'Content required' });
 
-  content[req.params.section] = newContent;
-  res.json({ success: true });
+    await pool.execute(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      [req.params.section, content, content]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update content' });
+  }
 });
 
-app.get('/api/public/content/:section', (req, res) => {
-  res.json({ content: content[req.params.section] || '' });
+app.get('/api/public/content/:section', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+    res.json(rows[0] || { content: '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
 });
 
-app.get('/api/admin/content', authenticateToken, (req, res) => {
-  const result = Object.entries(content).map(([title, content]) => ({ title, content }));
-  res.json(result);
+app.get('/api/admin/content', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM content ORDER BY title');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
 });
 
 // Upload
@@ -175,18 +226,26 @@ app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
 
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'Server working!', 
-    timestamp: new Date().toISOString(),
-    storage: 'In-memory'
-  });
+app.get('/api/test', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM messages');
+    res.json({ 
+      message: 'Server working with MySQL!', 
+      timestamp: new Date().toISOString(),
+      messagesCount: rows[0].count,
+      database: 'MySQL'
+    });
+  } catch (error) {
+    res.json({ message: 'Server working!', database: 'MySQL connected' });
+  }
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Main site: http://localhost:${PORT}`);
-  console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
-  console.log(`💾 Storage: In-memory (no SQLite needed)`);
+initDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Main site: http://localhost:${PORT}`);
+    console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
+    console.log(`🗄️ Database: MySQL`);
+  });
 });
