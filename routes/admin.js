@@ -78,7 +78,7 @@ router.get('/debug', async (req, res) => {
 router.post('/fix-password', async (req, res) => {
   try {
     const db = await getPool();
-    const bcrypt = require('bcryptjs');
+    // УБЕРИ require - bcrypt уже импортирован вверху файла
     
     // Хешируем правильный пароль
     const hashedPassword = await bcrypt.hash('thklty13$', 10);
