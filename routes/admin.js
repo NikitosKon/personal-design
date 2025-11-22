@@ -73,3 +73,25 @@ router.get('/debug', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Эндпоинт для исправления пароля
+router.post('/fix-password', async (req, res) => {
+  try {
+    const db = await getPool();
+    const bcrypt = require('bcryptjs');
+    
+    // Хешируем правильный пароль
+    const hashedPassword = await bcrypt.hash('thklty13$', 10);
+    
+    // Обновляем в базе
+    await db.query('UPDATE admins SET password_hash = ? WHERE username = ?', [hashedPassword, 'tykhon']);
+    
+    res.json({ 
+      success: true, 
+      message: 'Password fixed to: thklty13$'
+    });
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
