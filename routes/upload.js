@@ -40,7 +40,7 @@ function authMiddleware(req, res, next) {
 router.post('/image', authMiddleware, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file' });
 
-  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const fileUrl = `https://personal-design.eu/uploads/${req.file.filename}`;
 
   // Optionally save to content table or other table
   // Example: INSERT INTO content (key_name, value) VALUES ('portfolio_image_...', fileUrl)

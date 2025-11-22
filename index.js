@@ -49,7 +49,6 @@ async function initDatabase() {
         uri: mysqlUrl,
         connectionLimit: 10,
         ssl: { rejectUnauthorized: false },
-        acquireTimeout: 10000
       });
       
       // Тестируем подключение
@@ -133,7 +132,15 @@ async function createMySQLTables() {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:8080',
+        'http://localhost:3000', 
+        'https://personal-design.eu',
+        'https://www.personal-design.eu'
+    ],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin'));
@@ -311,7 +318,6 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
     }
 });
 
-// Upload
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
     try {
         if (!req.file) {
@@ -323,7 +329,7 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
 
         console.log('📁 File uploaded:', req.file.filename);
         
-        const fileUrl = `/uploads/${req.file.filename}`;
+        const fileUrl = `https://personal-design.eu/uploads/${req.file.filename}`; // ← ЗДЕСЬ ЗАМЕНИТЬ
         
         res.json({ 
             success: true, 
