@@ -1879,47 +1879,77 @@ document.addEventListener("DOMContentLoaded", () => {
 // Загрузка динамического контента
 async function loadDynamicContent() {
   try {
-    // Загружаем контент героя
+    console.log('Loading dynamic content for main site...');
+    
+    // ИСПРАВЛЕНО: используем публичные маршруты
     const [heroTitleRes, heroSubtitleRes, servicesRes, portfolioRes, contactRes] = await Promise.all([
-      fetch('/api/content/hero_title'),
-      fetch('/api/content/hero_subtitle'),
-      fetch('/api/content/services'),
-      fetch('/api/content/portfolio'),
-      fetch('/api/content/contact_info')
+      fetch('/api/public/content/hero_title'),
+      fetch('/api/public/content/hero_subtitle'),
+      fetch('/api/public/content/services'),
+      fetch('/api/public/content/portfolio'),
+      fetch('/api/public/content/contact_info')
     ]);
 
-    const heroTitle = await heroTitleRes.json();
-    const heroSubtitle = await heroSubtitleRes.json();
-    const services = await servicesRes.json();
-    const portfolio = await portfolioRes.json();
-    const contact = await contactRes.json();
+    const heroTitleData = await heroTitleRes.json();
+    const heroSubtitleData = await heroSubtitleRes.json();
+    const servicesData = await servicesRes.json();
+    const portfolioData = await portfolioRes.json();
+    const contactData = await contactRes.json();
+
+    console.log('Content loaded:', {
+      heroTitle: heroTitleData,
+      heroSubtitle: heroSubtitleData,
+      services: servicesData,
+      portfolio: portfolioData,
+      contact: contactData
+    });
 
     // Обновляем контент на странице
-    if (heroTitle.content) {
-      document.getElementById('hero-heading').textContent = heroTitle.content;
+    if (heroTitleData.content) {
+      const heroHeading = document.getElementById('hero-heading');
+      if (heroHeading) {
+        heroHeading.textContent = heroTitleData.content;
+      }
     }
     
-    if (heroSubtitle.content) {
-      document.querySelector('.hero-sub').textContent = heroSubtitle.content;
+    if (heroSubtitleData.content) {
+      const heroSub = document.querySelector('.hero-sub');
+      if (heroSub) {
+        heroSub.textContent = heroSubtitleData.content;
+      }
     }
 
     // Обновляем услуги
-    if (services.content) {
-      const servicesData = JSON.parse(services.content);
-      updateServices(servicesData);
+    if (servicesData.content) {
+      try {
+        const services = JSON.parse(servicesData.content);
+        updateServices(services);
+      } catch (e) {
+        console.error('Error parsing services:', e);
+      }
     }
 
     // Обновляем портфолио
-    if (portfolio.content) {
-      const portfolioData = JSON.parse(portfolio.content);
-      updatePortfolio(portfolioData);
+    if (portfolioData.content) {
+      try {
+        const portfolio = JSON.parse(portfolioData.content);
+        updatePortfolio(portfolio);
+      } catch (e) {
+        console.error('Error parsing portfolio:', e);
+      }
     }
 
     // Обновляем контакты
-    if (contact.content) {
-      const contactData = JSON.parse(contact.content);
-      updateContactInfo(contactData);
+    if (contactData.content) {
+      try {
+        const contact = JSON.parse(contactData.content);
+        updateContactInfo(contact);
+      } catch (e) {
+        console.error('Error parsing contact info:', e);
+      }
     }
+
+    console.log('Dynamic content applied successfully');
 
   } catch (error) {
     console.error('Error loading dynamic content:', error);
