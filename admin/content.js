@@ -1,280 +1,295 @@
-const API_BASE = '/api';
-let currentToken = localStorage.getItem('adminToken');
-let siteContent = {};
+import dotenv from 'dotenv';
+import express from 'express';
+import mysql from 'mysql2/promise';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import multer from 'multer';
+import fs from 'fs';
 
-function escapeHtml(unsafe) {
-    if (unsafe === null || unsafe === undefined) return '';
-    return unsafe.toString()
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+dotenv.config();
 
-if (!currentToken) {
-    window.location.href = '/admin/login.html';
-} else {
-    checkAuth();
-}
+const app = express();
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-async function checkAuth() {
-    try {
-        const res = await fetch(`${API_BASE}/admin/verify`, {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
-        if (!res.ok) throw new Error('Not authenticated');
-        await loadContent();
-    } catch (err) {
-        logout();
-    }
-}
+// MySQL connection
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  connectionLimit: 10
+});
 
-async function loadContent() {
-    const sections = ['hero_title', 'hero_subtitle', 'services', 'portfolio', 'contact_info'];
-    for (let section of sections) {
-        try {
-            const res = await fetch(`${API_BASE}/content/${section}`, {
-                headers: { 'Authorization': `Bearer ${currentToken}` }
-            });
-            siteContent[section] = res.ok ? await res.json() : { content: '' };
-        } catch (err) {
-            siteContent[section] = { content: '' };
-        }
-    }
-    renderContent();
-}
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+app.use('/admin', express.static('admin'));
+app.use('/uploads', express.static('uploads'));
 
-function renderContent() {
-    if (siteContent.hero_title) {
-        document.getElementById('hero-title').value = siteContent.hero_title.content || '';
-    }
-    if (siteContent.hero_subtitle) {
-        document.getElementById('hero-subtitle').value = siteContent.hero_subtitle.content || '';
-    }
+// Multer
+const storage = multer.diskStorage({
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
 
-    try {
-        if (siteContent.services) {
-            renderServices(JSON.parse(siteContent.services.content || '[]'));
-        }
-        if (siteContent.portfolio) {
-            renderPortfolio(JSON.parse(siteContent.portfolio.content || '[]'));
-        }
-        if (siteContent.contact_info) {
-            const contact = JSON.parse(siteContent.contact_info.content || '{}');
-            document.getElementById('contact-email').value = contact.email || '';
-            document.getElementById('contact-phone').value = contact.phone || '';
-            document.getElementById('contact-address').value = contact.address || '';
-        }
-    } catch (e) {
-        console.error('Error parsing content:', e);
-    }
-}
-
-function renderServices(services) {
-    const container = document.getElementById('services-list');
-    if (!container) return;
+// Init Database
+async function initDatabase() {
+  try {
+    console.log('🔧 Initializing MySQL database...');
     
-    container.innerHTML = services.length ? services.map((service, index) => `
-        <div class="item-card">
-            <div class="item-header">
-                <h3>Услуга ${index + 1}</h3>
-                <button type="button" class="delete-btn" onclick="deleteService(${index})">Удалить</button>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Название</label>
-                <input type="text" class="form-input service-title" value="${escapeHtml(service.title || '')}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Описание</label>
-                <textarea class="form-textarea service-desc">${escapeHtml(service.description || '')}</textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Иконка</label>
-                <input type="text" class="form-input service-icon" value="${escapeHtml(service.icon || 'fas fa-star')}">
-            </div>
-        </div>
-    `).join('') : '<p style="color: var(--muted); text-align: center; padding: 20px;">Нет услуг</p>';
-}
+    // Messages table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        project_type VARCHAR(255) NOT NULL,
+        message TEXT,
+        status VARCHAR(50) DEFAULT 'new',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-function renderPortfolio(portfolio) {
-    const container = document.getElementById('portfolio-list');
-    if (!container) return;
-    
-    container.innerHTML = portfolio.length ? portfolio.map((item, index) => `
-        <div class="item-card">
-            <div class="item-header">
-                <h3>Работа ${index + 1}</h3>
-                <button type="button" class="delete-btn" onclick="deletePortfolioItem(${index})">Удалить</button>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Изображение</label>
-                <div class="upload-container">
-                    <input type="text" class="form-input portfolio-image" value="${escapeHtml(item.image || '')}">
-                    <button type="button" class="upload-btn" onclick="uploadPortfolioImage(${index})">Загрузить</button>
-                </div>
-                ${item.image ? `<img src="${item.image}" class="image-preview" style="max-width: 200px; margin-top: 10px;">` : ''}
-            </div>
-            <div class="form-group">
-                <label class="form-label">Название</label>
-                <input type="text" class="form-input portfolio-title" value="${escapeHtml(item.title || '')}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Описание</label>
-                <textarea class="form-textarea portfolio-desc">${escapeHtml(item.description || '')}</textarea>
-            </div>
-        </div>
-    `).join('') : '<p style="color: var(--muted); text-align: center; padding: 20px;">Нет работ в портфолио</p>';
-}
+    // Content table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS content (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) UNIQUE NOT NULL,
+        content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-function addService() {
-    const services = JSON.parse(siteContent.services?.content || '[]');
-    services.push({ title: 'Новая услуга', description: 'Описание услуги', icon: 'fas fa-star' });
-    siteContent.services = { content: JSON.stringify(services) };
-    renderServices(services);
-}
+    // Admin table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS admin (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-function addPortfolioItem() {
-    const portfolio = JSON.parse(siteContent.portfolio?.content || '[]');
-    portfolio.push({ title: 'Новый проект', description: 'Описание проекта', image: '' });
-    siteContent.portfolio = { content: JSON.stringify(portfolio) };
-    renderPortfolio(portfolio);
-}
+    // Default content
+    const defaultContent = [
+      ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
+      ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
+      ['services', '[]'],
+      ['portfolio', '[]'],
+      ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
+    ];
 
-function deleteService(index) {
-    if (!confirm('Удалить эту услугу?')) return;
-    const services = JSON.parse(siteContent.services?.content || '[]');
-    services.splice(index, 1);
-    siteContent.services = { content: JSON.stringify(services) };
-    renderServices(services);
-}
-
-function deletePortfolioItem(index) {
-    if (!confirm('Удалить эту работу?')) return;
-    const portfolio = JSON.parse(siteContent.portfolio?.content || '[]');
-    portfolio.splice(index, 1);
-    siteContent.portfolio = { content: JSON.stringify(portfolio) };
-    renderPortfolio(portfolio);
-}
-
-async function uploadPortfolioImage(index) {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const card = document.querySelectorAll('#portfolio-list .item-card')[index];
-        const uploadBtn = card.querySelector('.upload-btn');
-        uploadBtn.textContent = 'Загрузка...';
-        uploadBtn.disabled = true;
-
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            const response = await fetch(`${API_BASE}/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${currentToken}` },
-                body: formData
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                card.querySelector('.portfolio-image').value = data.url;
-                showSuccess('Изображение загружено!');
-            }
-        } catch (err) {
-            showError('Ошибка загрузки');
-        } finally {
-            uploadBtn.textContent = 'Загрузить';
-            uploadBtn.disabled = false;
-        }
-    };
-    fileInput.click();
-}
-
-async function saveContent(section) {
-    try {
-        let content;
-        switch(section) {
-            case 'hero':
-                await fetch(`${API_BASE}/content/hero_title`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
-                    body: JSON.stringify({ content: document.getElementById('hero-title').value })
-                });
-                await fetch(`${API_BASE}/content/hero_subtitle`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
-                    body: JSON.stringify({ content: document.getElementById('hero-subtitle').value })
-                });
-                break;
-            case 'services':
-                const services = Array.from(document.querySelectorAll('#services-list .item-card')).map(card => ({
-                    title: card.querySelector('.service-title').value,
-                    description: card.querySelector('.service-desc').value,
-                    icon: card.querySelector('.service-icon').value
-                }));
-                await fetch(`${API_BASE}/content/services`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
-                    body: JSON.stringify({ content: JSON.stringify(services) })
-                });
-                break;
-            case 'portfolio':
-                const portfolio = Array.from(document.querySelectorAll('#portfolio-list .item-card')).map(card => ({
-                    title: card.querySelector('.portfolio-title').value,
-                    description: card.querySelector('.portfolio-desc').value,
-                    image: card.querySelector('.portfolio-image').value
-                }));
-                await fetch(`${API_BASE}/content/portfolio`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
-                    body: JSON.stringify({ content: JSON.stringify(portfolio) })
-                });
-                break;
-            case 'contact':
-                const contact = {
-                    email: document.getElementById('contact-email').value,
-                    phone: document.getElementById('contact-phone').value,
-                    address: document.getElementById('contact-address').value
-                };
-                await fetch(`${API_BASE}/content/contact_info`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
-                    body: JSON.stringify({ content: JSON.stringify(contact) })
-                });
-                break;
-        }
-        showSuccess('Контент сохранен!');
-        setTimeout(() => loadContent(), 1000);
-    } catch (err) {
-        showError('Ошибка сохранения');
+    for (const [title, content] of defaultContent) {
+      await pool.execute(
+        'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
+        [title, content]
+      );
     }
+
+    // Default admin
+    const hash = bcrypt.hashSync('admin123', 10);
+    await pool.execute(
+      'INSERT IGNORE INTO admin (username, password) VALUES (?, ?)',
+      ['admin', hash]
+    );
+
+    console.log('✅ MySQL database initialized');
+  } catch (error) {
+    console.error('❌ Database init error:', error);
+  }
 }
 
-function showSection(section, button) {
-    document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`${section}-section`).style.display = 'block';
-    if (button) button.classList.add('active');
-}
+// Auth middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access token required' });
+  
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+};
 
-function showSuccess(msg) {
-    alert('✅ ' + msg);
-}
+// Routes
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
-function showError(msg) {
-    alert('❌ ' + msg);
-}
+    const [rows] = await pool.execute('SELECT * FROM admin WHERE username = ?', [username]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    const user = rows[0];
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-function logout() {
-    localStorage.removeItem('adminToken');
-    window.location.href = '/admin/login.html';
-}
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token, user: { id: user.id, username: user.username } });
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
 
-document.addEventListener('DOMContentLoaded', () => {
-    showSection('hero');
-    document.querySelector('.nav-btn').classList.add('active');
+app.get('/api/admin/verify', authenticateToken, (req, res) => {
+  res.json({ success: true, user: req.user });
+});
+
+app.post('/api/admin/create', authenticateToken, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+
+    const hash = await bcrypt.hash(password, 10);
+    const [result] = await pool.execute(
+      'INSERT INTO admin (username, password) VALUES (?, ?) ON DUPLICATE KEY UPDATE password = ?',
+      [username, hash, hash]
+    );
+
+    res.json({ success: true, message: 'Admin created', username, id: result.insertId });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create admin' });
+  }
+});
+
+// Messages
+app.get('/api/messages', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM messages ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, project, message } = req.body;
+    if (!name || !email || !project) return res.status(400).json({ error: 'Name, email and project required' });
+
+    const [result] = await pool.execute(
+      'INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)',
+      [name, email, project, message || '']
+    );
+
+    res.json({ success: true, message: 'Message sent', id: result.insertId });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to save message' });
+  }
+});
+
+app.put('/api/messages/:id', authenticateToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status required' });
+
+    const [result] = await pool.execute('UPDATE messages SET status = ? WHERE id = ?', [status, req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Message not found' });
+
+    res.json({ success: true, message: 'Message updated' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update message' });
+  }
+});
+
+app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.execute('DELETE FROM messages WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Message not found' });
+
+    res.json({ success: true, message: 'Message deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+
+// Content
+app.get('/api/content/:section', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+    res.json(rows[0] || { content: '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
+});
+
+app.put('/api/content/:section', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ error: 'Content required' });
+
+    await pool.execute(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      [req.params.section, content, content]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update content' });
+  }
+});
+
+app.get('/api/public/content/:section', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+    res.json(rows[0] || { content: '' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
+});
+
+app.get('/api/admin/content', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT * FROM content ORDER BY title');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch content' });
+  }
+});
+
+// Upload
+app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+  res.json({ success: true, url: `/uploads/${req.file.filename}`, filename: req.file.filename });
+});
+
+// Main routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
+
+app.get('/api/test', async (req, res) => {
+  try {
+    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM messages');
+    res.json({ 
+      message: 'Server working with MySQL!', 
+      timestamp: new Date().toISOString(),
+      messagesCount: rows[0].count
+    });
+  } catch (error) {
+    res.json({ message: 'Server working!', database: 'MySQL connected' });
+  }
+});
+
+// Start server
+initDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Main site: http://localhost:${PORT}`);
+    console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
+    console.log(`🗄️ Database: MySQL`);
+  });
 });
