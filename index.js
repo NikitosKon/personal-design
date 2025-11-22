@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
 import uploadRoutes from './routes/upload.js';
-import contentRoutes from './routes/content.js';
 import messagesRoutes from './routes/messages.js';
 import dotenv from 'dotenv';
 
