@@ -800,48 +800,59 @@
   </div>
 
   <div class="portfolio-grid">
-  <article class="project reveal" aria-label="Logo for CoffeeHub">
-    <!-- Фоновая картинка проекта -->
-    <div class="project-bg" style="background-image: url('URL_проекта');"></div>
-
-    <!-- Контент проекта -->
-    <div class="project-content">
-      <div class="meta">Logo for CoffeeHub</div>
-      <p>Modern mark — applied across packaging and web.</p>
-    </div>
-  </article>
-
-  <article class="project reveal" aria-label="Restaurant Menu">
-    <div class="project-bg" style="background-image: url('URL_проекта');"></div>
-    <div class="project-content">
-      <div class="meta">Restaurant Menu</div>
-      <p>Clean layout focused on appetite and conversion.</p>
-    </div>
-  </article>
-  <article class="project reveal" aria-label="Instagram Campaign">
-      <div class="meta">Instagram Campaign</div>
-      <p>Coherent visual system for multi-platform ads and posts.</p>
+    <article class="project reveal" aria-label="Logo for CoffeeHub">
+      <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/00d7a8/ffffff?text=CoffeeHub+Logo');"></div>
+      <div class="project-content">
+        <div class="meta">Logo for CoffeeHub</div>
+        <p>Modern mark — applied across packaging and web.</p>
+      </div>
     </article>
-      <article class="project reveal additional-project" aria-label="Brand Identity for TechStart" style="display: none;">
-      <div class="meta">Brand Identity for TechStart</div>
-      <p>Complete branding for tech startup including logo and guidelines.</p>
+
+    <article class="project reveal" aria-label="Restaurant Menu">
+      <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/4db4ff/ffffff?text=Restaurant+Menu');"></div>
+      <div class="project-content">
+        <div class="meta">Restaurant Menu</div>
+        <p>Clean layout focused on appetite and conversion.</p>
+      </div>
+    </article>
+
+    <article class="project reveal" aria-label="Instagram Campaign">
+      <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/e1306c/ffffff?text=Instagram+Campaign');"></div>
+      <div class="project-content">
+        <div class="meta">Instagram Campaign</div>
+        <p>Coherent visual system for multi-platform ads and posts.</p>
+      </div>
+    </article>
+
+    <article class="project reveal additional-project" aria-label="Brand Identity for TechStart" style="display: none;">
+      <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/1877f2/ffffff?text=TechStart+Brand');"></div>
+      <div class="project-content">
+        <div class="meta">Brand Identity for TechStart</div>
+        <p>Complete branding for tech startup including logo and guidelines.</p>
+      </div>
     </article>
 
     <article class="project reveal additional-project" aria-label="Product Packaging" style="display: none;">
-      <div class="meta">Product Packaging</div>
-      <p>Eye-catching packaging design for consumer goods.</p>
+      <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/00b894/ffffff?text=Product+Packaging');"></div>
+      <div class="project-content">
+        <div class="meta">Product Packaging</div>
+        <p>Eye-catching packaging design for consumer goods.</p>
+      </div>
     </article>
 
     <article class="project reveal additional-project" aria-label="Social Media Kit" style="display: none;">
-      <div class="meta">Social Media Kit</div>
-      <p>Complete set of templates for social media marketing.</p>
+      <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/8e44ad/ffffff?text=Social+Media+Kit');"></div>
+      <div class="project-content">
+        <div class="meta">Social Media Kit</div>
+        <p>Complete set of templates for social media marketing.</p>
+      </div>
     </article>
   </div>
 
-      <div style="text-align:center;margin-top:18px">
-        <a class="btn" href="javascript:void(0)" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</a>
-      </div>
-    </section>
+  <div style="text-align:center;margin-top:18px">
+    <a class="btn" href="javascript:void(0)" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</a>
+  </div>
+</section>
 
         <section id="services" class="container reveal" aria-labelledby="services-title">
       <div class="section-title">
@@ -1963,7 +1974,7 @@ async function loadDynamicContent() {
       <p>${service.description || ''}</p>
     </div>
   `).join('');
-}
+
 
 function updatePortfolio(portfolio) {
   const container = document.querySelector('.portfolio-grid');
@@ -1994,12 +2005,6 @@ function updatePortfolio(portfolio) {
     document.querySelectorAll('.project.reveal').forEach(el => {
       observer.observe(el);
     });
-
-    // Инициализируем переключение проектов
-    initPortfolioToggle();
-  }, 100);
-}
-
 
 function updateContactInfo(contact) {
   if (contact.email) {
@@ -2134,7 +2139,6 @@ async function loadDynamicContent() {
       observer.observe(el);
     });
   }, 100);
-}
 
   // Реинициализируем анимации для новых элементов
   setTimeout(() => {
@@ -2223,7 +2227,6 @@ document.addEventListener('click', function(e) {
       p.style.display = "none";
     });
   }, 100);
-}
 
 // Обновленная функция для портфолио
   // Реинициализируем анимации
@@ -2239,9 +2242,6 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.project.reveal').forEach(el => {
       observer.observe(el);
     });
-
-    // Инициализируем переключение проектов
-    initPortfolioToggle();
   }, 100);
 }
 
