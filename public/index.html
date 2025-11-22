@@ -2029,10 +2029,10 @@ function updateContactInfo(contact) {
     }
   }
 }
+</script>
 
 // Загружаем контент при загрузке страницы
 document.addEventListener('DOMContentLoaded', loadDynamicContent);
-</script>
 
 <script>
 // Загрузка динамического контента для основного сайта
@@ -2154,7 +2154,6 @@ async function loadDynamicContent() {
       observer.observe(el);
     });
   }, 100);
-}
 
 function updateContactInfo(contact) {
   console.log('Updating contact info with:', contact);
@@ -2204,31 +2203,53 @@ document.addEventListener('click', function(e) {
 
 <script>
 // Функциональность кнопки "See all projects" для динамического контента
+document.addEventListener('DOMContentLoaded', function() {
+  const showMoreBtn = document.getElementById('showMoreBtn');
+  
+  if (showMoreBtn) {
+    let expanded = false;
 
-  newBtn.addEventListener("click", () => {
-    expanded = !expanded;
+    showMoreBtn.addEventListener("click", () => {
+      expanded = !expanded;
 
-    // Находим все проекты, начиная с 4-го (индексы 3,4,5)
-    const allProjects = document.querySelectorAll('.portfolio-grid .project');
-    const hiddenProjects = Array.from(allProjects).slice(3);
+      // Находим все дополнительные проекты
+      const hiddenProjects = document.querySelectorAll('.additional-project');
+      
+      hiddenProjects.forEach(p => {
+        p.style.display = expanded ? "flex" : "none";
+      });
 
-    hiddenProjects.forEach(p => {
-      p.style.display = expanded ? "flex" : "none";
+      showMoreBtn.textContent = expanded ? "Show less" : "See all projects";
     });
 
-    newBtn.textContent = expanded ? "Show less" : "See all projects";
-  });
-
-  // Изначально скрываем проекты с 4-го
-  setTimeout(() => {
-    const allProjects = document.querySelectorAll('.portfolio-grid .project');
-    const hiddenProjects = Array.from(allProjects).slice(3);
-    hiddenProjects.forEach(p => {
+    // Изначально скрываем дополнительные проекты
+    document.querySelectorAll('.additional-project').forEach(p => {
       p.style.display = "none";
     });
-  }, 100);
+  }
+
+  // Загружаем контент при загрузке страницы
+  console.log('Main site DOM loaded, loading dynamic content...');
+  loadDynamicContent();
+});
 
 // Обновленная функция для портфолио
+function updatePortfolio(portfolio) {
+  const container = document.querySelector('.portfolio-grid');
+  if (!container || !portfolio || portfolio.length === 0) return;
+
+  container.innerHTML = portfolio.map((item, index) => `
+    <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
+             aria-label="${item.title || 'Project'}" 
+             style="${index >= 3 ? 'display: none;' : ''}">
+      <div class="project-bg" style="background-image: url('${item.image || ''}');"></div>
+      <div class="project-content">
+        <div class="meta">${item.title || 'Project'}</div>
+        <p>${item.description || ''}</p>
+      </div>
+    </article>
+  `).join('');
+
   // Реинициализируем анимации
   setTimeout(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -2243,6 +2264,7 @@ document.addEventListener('click', function(e) {
       observer.observe(el);
     });
   }, 100);
+}
 
 // Обновляем функцию загрузки контента
 async function loadDynamicContent() {
@@ -2379,12 +2401,6 @@ function updateContactInfo(contact) {
     });
   }
 }
-
-// Загружаем контент при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('Main site DOM loaded, loading dynamic content...');
-  loadDynamicContent();
-});
 </script>
 
 </body>
