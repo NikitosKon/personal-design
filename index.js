@@ -10,7 +10,6 @@ import fs from 'fs';
 import uploadRoutes from './routes/upload.js';
 import contentRoutes from './routes/content.js';
 import messagesRoutes from './routes/messages.js';
-import { initDatabase, db } from './database.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -182,20 +181,7 @@ app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
     next();
 });
-
-// CORS middleware
-app.use(cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
-    credentials: true
-}));
   
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid token' });
-    req.user = user;
-    next();
-  });
-};
-
 // Routes
 app.post('/api/admin/login', async (req, res) => {
   try {
@@ -320,36 +306,6 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
         console.error('❌ Error updating content:', error);
         res.status(500).json({ error: 'Failed to update content' });
     }
-});
-
-app.get('/api/public/content/:section', async (req, res) => {
-  try {
-    let result;
-    if (useMySQL) {
-      const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
-      result = rows[0] || { content: '' };
-    } else {
-      result = { content: content[req.params.section] || '' };
-    }
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch content' });
-  }
-});
-
-app.get('/api/admin/content', authenticateToken, async (req, res) => {
-  try {
-    let result;
-    if (useMySQL) {
-      const [rows] = await pool.execute('SELECT * FROM content ORDER BY title');
-      result = rows;
-    } else {
-      result = Object.entries(content).map(([title, content]) => ({ title, content }));
-    }
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch content' });
-  }
 });
 
 // Upload
