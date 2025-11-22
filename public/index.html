@@ -1967,6 +1967,10 @@ async function loadDynamicContent() {
   }
 }
 
+function updateServices(services) {
+  const container = document.querySelector('.services-grid');
+  if (!container || !services || services.length === 0) return;
+
   container.innerHTML = services.map(service => `
     <div class="service reveal">
       <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
@@ -1975,6 +1979,21 @@ async function loadDynamicContent() {
     </div>
   `).join('');
 
+  // Реинициализируем анимации для новых элементов
+  setTimeout(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.service.reveal').forEach(el => {
+      observer.observe(el);
+    });
+  }, 100);
+}
 
 function updatePortfolio(portfolio) {
   const container = document.querySelector('.portfolio-grid');
@@ -2005,6 +2024,8 @@ function updatePortfolio(portfolio) {
     document.querySelectorAll('.project.reveal').forEach(el => {
       observer.observe(el);
     });
+  }, 100);
+}
 
 function updateContactInfo(contact) {
   if (contact.email) {
@@ -2029,10 +2050,136 @@ function updateContactInfo(contact) {
     }
   }
 }
-</script>
 
 // Загружаем контент при загрузке страницы
 document.addEventListener('DOMContentLoaded', loadDynamicContent);
+</script>
+
+<script>
+// Dynamic content functionality - ИСПРАВЛЕННАЯ ВЕРСИЯ
+function updateServices(services) {
+  const container = document.querySelector('.services-grid');
+  if (!container || !services || services.length === 0) return;
+
+  container.innerHTML = services.map(service => `
+    <div class="service reveal">
+      <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
+      <h4>${service.title || 'Service'}</h4>
+      <p>${service.description || ''}</p>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.service.reveal').forEach(el => observer.observe(el));
+  }, 100);
+}
+
+function updatePortfolio(portfolio) {
+  const container = document.querySelector('.portfolio-grid');
+  if (!container || !portfolio || portfolio.length === 0) return;
+
+  container.innerHTML = portfolio.map((item, index) => `
+    <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
+             style="${index >= 3 ? 'display: none;' : ''}">
+      <div class="project-bg" style="background-image: url('${item.image || ''}');"></div>
+      <div class="project-content">
+        <div class="meta">${item.title || 'Project'}</div>
+        <p>${item.description || ''}</p>
+      </div>
+    </article>
+  `).join('');
+
+  setTimeout(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.project.reveal').forEach(el => observer.observe(el));
+  }, 100);
+}
+
+function updateContactInfo(contact) {
+  if (contact.email) {
+    document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
+      link.href = `mailto:${contact.email}`;
+      if (link.textContent.includes('@')) link.textContent = contact.email;
+    });
+  }
+  if (contact.phone) {
+    document.querySelectorAll('p:has(.fa-phone) span').forEach(el => {
+      if (el.textContent.includes('+')) el.textContent = contact.phone;
+    });
+  }
+  if (contact.address) {
+    document.querySelectorAll('p:has(.fa-map-marker-alt) span').forEach(el => {
+      if (el.textContent) el.textContent = contact.address;
+    });
+  }
+}
+
+async function loadDynamicContent() {
+  try {
+    const [heroTitleRes, heroSubtitleRes, servicesRes, portfolioRes, contactRes] = await Promise.all([
+      fetch('/api/public/content/hero_title'),
+      fetch('/api/public/content/hero_subtitle'),
+      fetch('/api/public/content/services'),
+      fetch('/api/public/content/portfolio'),
+      fetch('/api/public/content/contact_info')
+    ]);
+
+    const heroTitleData = await heroTitleRes.json();
+    const heroSubtitleData = await heroSubtitleRes.json();
+    const servicesData = await servicesRes.json();
+    const portfolioData = await portfolioRes.json();
+    const contactData = await contactRes.json();
+
+    if (heroTitleData.content) {
+      const heroHeading = document.getElementById('hero-heading');
+      if (heroHeading) heroHeading.textContent = heroTitleData.content;
+    }
+    if (heroSubtitleData.content) {
+      const heroSub = document.querySelector('.hero-sub');
+      if (heroSub) heroSub.textContent = heroSubtitleData.content;
+    }
+    if (servicesData.content) {
+      try { updateServices(JSON.parse(servicesData.content)); } catch(e) { console.error(e); }
+    }
+    if (portfolioData.content) {
+      try { updatePortfolio(JSON.parse(portfolioData.content)); } catch(e) { console.error(e); }
+    }
+    if (contactData.content) {
+      try { updateContactInfo(JSON.parse(contactData.content)); } catch(e) { console.error(e); }
+    }
+  } catch (error) {
+    console.error('Error loading dynamic content:', error);
+  }
+}
+
+// See all projects functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const showMoreBtn = document.querySelector('a.btn[href="javascript:void(0)"]');
+  if (showMoreBtn) {
+    let expanded = false;
+    showMoreBtn.addEventListener("click", () => {
+      expanded = !expanded;
+      document.querySelectorAll('.additional-project').forEach(p => {
+        p.style.display = expanded ? "flex" : "none";
+      });
+      showMoreBtn.textContent = expanded ? "Show less" : "See all projects";
+    });
+    document.querySelectorAll('.additional-project').forEach(p => {
+      p.style.display = "none";
+    });
+  }
+  loadDynamicContent();
+});
+</script>
 
 </body>
 </html>
