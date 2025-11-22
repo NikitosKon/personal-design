@@ -6,47 +6,42 @@ dotenv.config();
 
 let pool;
 
-function parseDatabaseUrl(url) {
-  try {
-    const parsed = new URL(url);
-    return {
-      host: parsed.hostname,
-      port: parsed.port,
-      user: parsed.username,
-      password: parsed.password,
-      database: parsed.pathname.replace(/^\//, '')
-    };
-  } catch (e) {
-    return null;
-  }
-}
-
 export async function getPool() {
   if (pool) return pool;
 
-  let cfg = null;
-  if (process.env.DATABASE_URL) {
-    cfg = parseDatabaseUrl(process.env.DATABASE_URL);
-  }
-
-  pool = mysql.createPool({
-    host: cfg?.host || process.env.DB_HOST || process.env.MYSQLHOST,
-    user: cfg?.user || process.env.DB_USER || process.env.MYSQLUSER,
-    password: cfg?.password || process.env.DB_PASS || process.env.MYSQLPASSWORD,
-    database: cfg?.database || process.env.DB_NAME || process.env.MYSQLDATABASE,
-    port: cfg?.port || process.env.DB_PORT || process.env.MYSQLPORT || 3306,
+  const config = {
+    host: process.env.MYSQLHOST || 'localhost',
+    user: process.env.MYSQLUSER || 'root',
+    password: process.env.MYSQLPASSWORD || '',
+    database: process.env.MYSQLDATABASE || 'personal_design',
+    port: process.env.MYSQLPORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     decimalNumbers: true
-  });
+  };
 
+  // Если есть DATABASE_URL, парсим его
+  if (process.env.DATABASE_URL) {
+    try {
+      const url = new URL(process.env.DATABASE_URL);
+      config.host = url.hostname;
+      config.port = url.port;
+      config.user = url.username;
+      config.password = url.password;
+      config.database = url.pathname.replace(/^\//, '');
+    } catch (e) {
+      console.log('Using individual MySQL config');
+    }
+  }
+
+  pool = mysql.createPool(config);
   return pool;
 }
 
 export async function initDatabase() {
   const db = await getPool();
 
-  // Создаём таблицы, если не существуют
+  // Создаём таблицы
   await db.execute(`
     CREATE TABLE IF NOT EXISTS admins (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,18 +72,29 @@ export async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
-  // Seed admin if none exists
+  // Добавляем тестового админа если нет
   const [rows] = await db.execute(`SELECT COUNT(*) AS cnt FROM admins`);
   if (rows[0].cnt === 0) {
-    const adminUser = process.env.ADMIN_USERNAME || 'admin';
-    const adminPass = process.env.ADMIN_PASSWORD || 'password';
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(adminPass, salt);
-    await db.execute(`INSERT INTO admins (username, password_hash) VALUES (?, ?)`, [adminUser, hash]);
-    console.log(`Seeded admin user: ${adminUser} (from ADMIN_USERNAME / ADMIN_PASSWORD env)`);
+    const hash = await bcrypt.hash('thklty13$', 10);
+    await db.execute(`INSERT INTO admins (username, password_hash) VALUES (?, ?)`, ['tykhon', hash]);
+    console.log('✅ Test admin created: tykhon / thklty13$');
   }
 
-  console.log('Database initialized');
-}
+  // Добавляем дефолтный контент
+  const defaultContent = [
+    ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
+    ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
+    ['services', '[]'],
+    ['portfolio', '[]'],
+    ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
+  ];
 
-export { getPool as db };
+  for (const [key, value] of defaultContent) {
+    await db.execute(
+      'INSERT IGNORE INTO content (key_name, value) VALUES (?, ?)',
+      [key, value]
+    );
+  }
+
+  console.log('✅ Database initialized');
+}
