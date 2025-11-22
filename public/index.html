@@ -1956,10 +1956,6 @@ async function loadDynamicContent() {
   }
 }
 
-function updateServices(services) {
-  const container = document.querySelector('.services-grid');
-  if (!container || services.length === 0) return;
-
   container.innerHTML = services.map(service => `
     <div class="service reveal">
       <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
@@ -2114,13 +2110,6 @@ async function loadDynamicContent() {
   }
 }
 
-function updateServices(services) {
-  const container = document.querySelector('.services-grid');
-  if (!container || !services || services.length === 0) {
-    console.log('No services container or empty services');
-    return;
-  }
-
   console.log('Updating services with:', services);
   
   container.innerHTML = services.map(service => `
@@ -2146,23 +2135,6 @@ function updateServices(services) {
     });
   }, 100);
 }
-
-function updatePortfolio(portfolio) {
-  const container = document.querySelector('.portfolio-grid');
-  if (!container || !portfolio || portfolio.length === 0) {
-    console.log('No portfolio container or empty portfolio');
-    return;
-  }
-
-  console.log('Updating portfolio with:', portfolio);
-  
-  container.innerHTML = portfolio.map(item => `
-    <article class="project reveal" aria-label="${item.title || 'Project'}">
-      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:240px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
-      <div class="meta">${item.title || 'Project'}</div>
-      <p>${item.description || ''}</p>
-    </article>
-  `).join('');
 
   // Реинициализируем анимации для новых элементов
   setTimeout(() => {
@@ -2228,15 +2200,6 @@ document.addEventListener('click', function(e) {
 
 <script>
 // Функциональность кнопки "See all projects" для динамического контента
-function initPortfolioToggle() {
-  const btn = document.querySelector('a.btn[href="javascript:void(0)"]');
-  if (!btn) return;
-
-  let expanded = false;
-
-  // Удаляем старый обработчик если есть
-  btn.replaceWith(btn.cloneNode(true));
-  const newBtn = document.querySelector('a.btn[href="javascript:void(0)"]');
 
   newBtn.addEventListener("click", () => {
     expanded = !expanded;
@@ -2263,25 +2226,6 @@ function initPortfolioToggle() {
 }
 
 // Обновленная функция для портфолио
-function updatePortfolio(portfolio) {
-  const container = document.querySelector('.portfolio-grid');
-  if (!container || !portfolio || portfolio.length === 0) {
-    console.log('No portfolio container or empty portfolio');
-    return;
-  }
-
-  console.log('Updating portfolio with:', portfolio);
-  
-  container.innerHTML = portfolio.map((item, index) => `
-    <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
-             aria-label="${item.title || 'Project'}" 
-             style="${index >= 3 ? 'display: none;' : ''}">
-      ${item.image ? `<img src="${item.image}" alt="${item.title}" style="width:100%;height:240px;object-fit:cover;margin-bottom:10px;border-radius:8px;" onerror="this.style.display='none'">` : ''}
-      <div class="meta">${item.title || 'Project'}</div>
-      <p>${item.description || ''}</p>
-    </article>
-  `).join('');
-
   // Реинициализируем анимации
   setTimeout(() => {
     const observer = new IntersectionObserver((entries) => {
