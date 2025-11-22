@@ -1,5 +1,5 @@
 import express from 'express';
-import { db } from '../database.js';
+import { getPool } from '../database.js'; // ИЗМЕНИТЬ ИМПОРТ
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -15,17 +15,16 @@ router.post('/login', async (req, res) => {
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
   try {
-    // ИСПРАВЛЕНО: admins вместо admin
+    const db = await getPool(); // ПОЛУЧИТЬ POOL
     const [rows] = await db.execute('SELECT * FROM admins WHERE username = ?', [username]);
     if (!rows || rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
 
     const admin = rows[0];
-    // ИСПРАВЛЕНО: password_hash вместо password
     const ok = await bcrypt.compare(password, admin.password_hash);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign({ sub: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES });
-    res.json({ success: true, token }); // Добавь success: true для фронтенда
+    res.json({ success: true, token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

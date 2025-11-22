@@ -1,5 +1,5 @@
 import express from 'express';
-import { db } from '../database.js';
+import { getPool } from '../database.js'; // ИЗМЕНИ ИМПОРТ
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -23,7 +23,8 @@ function authMiddleware(req, res, next) {
 router.post('/', async (req, res) => {
   const { name, email, project, message } = req.body;
   try {
-    const [result] = await db.execute(
+    const db = await getPool(); // ДОБАВЬ ЭТУ СТРОКУ
+    const [result] = await db.query(
       `INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)`,
       [name || null, email || null, project || null, message || null]
     );
@@ -37,7 +38,8 @@ router.post('/', async (req, res) => {
 // GET /api/messages - protected
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const [rows] = await db.execute('SELECT * FROM messages ORDER BY created_at DESC');
+    const db = await getPool(); // ДОБАВЬ ЭТУ СТРОКУ
+    const [rows] = await db.query('SELECT * FROM messages ORDER BY created_at DESC');
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -51,7 +53,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
   const { status } = req.body;
   if (!['new','read','replied'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
   try {
-    await db.execute('UPDATE messages SET status = ? WHERE id = ?', [status, id]);
+    const db = await getPool(); // ДОБАВЬ ЭТУ СТРОКУ
+    await db.query('UPDATE messages SET status = ? WHERE id = ?', [status, id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -63,7 +66,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
 router.delete('/:id', authMiddleware, async (req, res) => {
   const id = req.params.id;
   try {
-    await db.execute('DELETE FROM messages WHERE id = ?', [id]);
+    const db = await getPool(); // ДОБАВЬ ЭТУ СТРОКУ
+    await db.query('DELETE FROM messages WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
