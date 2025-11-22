@@ -17,36 +17,58 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Добавь в начало index.js для диагностики
-console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+// In-memory storage как fallback
+let messages = [];
+let content = {};
+let admins = [{ id: 1, username: 'admin', password: bcrypt.hashSync('admin123', 10) }];
+let useMySQL = false;
+let pool;
 
-// MySQL connection
-const pool = mysql.createPool({
-  uri: process.env.MYSQL_PUBLIC_URL,  // ← ИСПОЛЬЗУЙ ЭТУ ПЕРЕМЕННУЮ
-  connectionLimit: 10,
-  ssl: { rejectUnauthorized: false }
-});
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-app.use('/admin', express.static('admin'));
-app.use('/uploads', express.static('uploads'));
+// Default content
+const defaultContent = {
+  hero_title: 'We craft premium logos, posters, social content, promo videos & 3D visuals.',
+  hero_subtitle: 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.',
+  services: '[]',
+  portfolio: '[]',
+  contact_info: '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}'
+};
 
-// Multer
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-const upload = multer({ storage });
-
-// Init Database
+// Пробуем подключиться к MySQL
 async function initDatabase() {
   try {
-    console.log('🔧 Initializing MySQL database...');
+    console.log('🔧 Testing MySQL connection...');
     
+    const mysqlUrl = process.env.MYSQL_PUBLIC_URL || process.env.DATABASE_URL;
+    console.log('MySQL URL:', mysqlUrl ? 'Set' : 'Not set');
+    
+    if (mysqlUrl) {
+      pool = mysql.createPool({
+        uri: mysqlUrl,
+        connectionLimit: 10,
+        ssl: { rejectUnauthorized: false },
+        acquireTimeout: 10000
+      });
+      
+      // Тестируем подключение
+      await pool.execute('SELECT 1');
+      useMySQL = true;
+      console.log('✅ MySQL connected successfully');
+      
+      // Создаем таблицы если используем MySQL
+      await createMySQLTables();
+    } else {
+      console.log('❌ No MySQL URL found, using in-memory storage');
+      Object.assign(content, defaultContent);
+    }
+  } catch (error) {
+    console.log('❌ MySQL connection failed, using in-memory storage');
+    console.log('Error:', error.message);
+    Object.assign(content, defaultContent);
+  }
+}
+
+async function createMySQLTables() {
+  try {
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS messages (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -101,11 +123,27 @@ async function initDatabase() {
       ['admin', hash]
     );
 
-    console.log('✅ MySQL database initialized');
+    console.log('✅ MySQL tables initialized');
   } catch (error) {
-    console.error('❌ Database init error:', error);
+    console.error('Error creating MySQL tables:', error);
   }
 }
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+app.use('/admin', express.static('admin'));
+app.use('/uploads', express.static('uploads'));
+
+// Multer
+const storage = multer.diskStorage({
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
@@ -126,10 +164,16 @@ app.post('/api/admin/login', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
-    const [rows] = await pool.execute('SELECT * FROM admin WHERE username = ?', [username]);
-    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    let user;
+    if (useMySQL) {
+      const [rows] = await pool.execute('SELECT * FROM admin WHERE username = ?', [username]);
+      user = rows[0];
+    } else {
+      user = admins.find(a => a.username === username);
+    }
+
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
     
-    const user = rows[0];
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -147,8 +191,14 @@ app.get('/api/admin/verify', authenticateToken, (req, res) => {
 // Messages
 app.get('/api/messages', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM messages ORDER BY created_at DESC');
-    res.json(rows);
+    let result;
+    if (useMySQL) {
+      const [rows] = await pool.execute('SELECT * FROM messages ORDER BY created_at DESC');
+      result = rows;
+    } else {
+      result = messages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
@@ -159,12 +209,25 @@ app.post('/api/contact', async (req, res) => {
     const { name, email, project, message } = req.body;
     if (!name || !email || !project) return res.status(400).json({ error: 'Name, email and project required' });
 
-    const [result] = await pool.execute(
-      'INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)',
-      [name, email, project, message || '']
-    );
-
-    res.json({ success: true, message: 'Message sent', id: result.insertId });
+    if (useMySQL) {
+      const [result] = await pool.execute(
+        'INSERT INTO messages (name, email, project_type, message) VALUES (?, ?, ?, ?)',
+        [name, email, project, message || '']
+      );
+      res.json({ success: true, message: 'Message sent', id: result.insertId });
+    } else {
+      const newMessage = {
+        id: Date.now(),
+        name,
+        email, 
+        project_type: project,
+        message: message || '',
+        status: 'new',
+        created_at: new Date().toISOString()
+      };
+      messages.push(newMessage);
+      res.json({ success: true, message: 'Message sent', id: newMessage.id });
+    }
   } catch (error) {
     res.status(500).json({ error: 'Failed to save message' });
   }
@@ -173,34 +236,32 @@ app.post('/api/contact', async (req, res) => {
 // Content
 app.get('/api/content/:section', authenticateToken, async (req, res) => {
   try {
-    console.log('Fetching content for:', req.params.section);
-    const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
-    console.log('Query result:', rows);
-    res.json(rows[0] || { content: '' });
+    let result;
+    if (useMySQL) {
+      const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+      result = rows[0] || { content: '' };
+    } else {
+      result = { content: content[req.params.section] || '' };
+    }
+    res.json(result);
   } catch (error) {
-    console.error('Content fetch error:', error);
-    res.status(500).json({ error: 'Database error: ' + error.message });
-  }
-});
-
-app.get('/api/debug-db', async (req, res) => {
-  try {
-    const [rows] = await pool.execute('SELECT 1 as test');
-    res.json({ success: true, database: 'MySQL connected', test: rows[0] });
-  } catch (error) {
-    res.json({ success: false, error: error.message });
+    res.status(500).json({ error: 'Failed to fetch content' });
   }
 });
 
 app.put('/api/content/:section', authenticateToken, async (req, res) => {
   try {
-    const { content } = req.body;
-    if (!content) return res.status(400).json({ error: 'Content required' });
+    const { content: newContent } = req.body;
+    if (!newContent) return res.status(400).json({ error: 'Content required' });
 
-    await pool.execute(
-      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
-      [req.params.section, content, content]
-    );
+    if (useMySQL) {
+      await pool.execute(
+        'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+        [req.params.section, newContent, newContent]
+      );
+    } else {
+      content[req.params.section] = newContent;
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -210,8 +271,14 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
 
 app.get('/api/public/content/:section', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
-    res.json(rows[0] || { content: '' });
+    let result;
+    if (useMySQL) {
+      const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
+      result = rows[0] || { content: '' };
+    } else {
+      result = { content: content[req.params.section] || '' };
+    }
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch content' });
   }
@@ -219,8 +286,14 @@ app.get('/api/public/content/:section', async (req, res) => {
 
 app.get('/api/admin/content', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM content ORDER BY title');
-    res.json(rows);
+    let result;
+    if (useMySQL) {
+      const [rows] = await pool.execute('SELECT * FROM content ORDER BY title');
+      result = rows;
+    } else {
+      result = Object.entries(content).map(([title, content]) => ({ title, content }));
+    }
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch content' });
   }
@@ -243,15 +316,22 @@ app.get('/admin/*', (req, res) => {
 
 app.get('/api/test', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM messages');
+    let messagesCount = 0;
+    if (useMySQL) {
+      const [rows] = await pool.execute('SELECT COUNT(*) as count FROM messages');
+      messagesCount = rows[0].count;
+    } else {
+      messagesCount = messages.length;
+    }
+    
     res.json({ 
-      message: 'Server working with MySQL!', 
+      message: 'Server working!', 
       timestamp: new Date().toISOString(),
-      messagesCount: rows[0].count,
-      database: 'MySQL'
+      storage: useMySQL ? 'MySQL' : 'In-memory',
+      messagesCount: messagesCount
     });
   } catch (error) {
-    res.json({ message: 'Server working!', database: 'MySQL connected' });
+    res.json({ message: 'Server working!', storage: 'In-memory' });
   }
 });
 
@@ -261,6 +341,6 @@ initDatabase().then(() => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Main site: http://localhost:${PORT}`);
     console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
-    console.log(`🗄️ Database: MySQL`);
+    console.log(`🗄️ Database: ${useMySQL ? 'MySQL' : 'In-memory'}`);
   });
 });
