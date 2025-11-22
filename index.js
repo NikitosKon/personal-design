@@ -8,6 +8,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
+import uploadRoutes from './routes/upload.js';
+import contentRoutes from './routes/content.js';
+import messagesRoutes from './routes/messages.js';
+import { initDatabase, db } from './database.js';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -147,9 +152,43 @@ const upload = multer({ storage });
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Access token required' });
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    console.log('🔐 Auth check:', { 
+        hasAuthHeader: !!authHeader,
+        tokenPresent: !!token,
+        path: req.path 
+    });
+    
+    if (!token) {
+        console.log('❌ No token provided');
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            console.log('❌ Token verification failed:', err.message);
+            return res.status(403).json({ error: 'Invalid token' });
+        }
+        
+        console.log('✅ Token verified for user:', user.username);
+        req.user = user;
+        next();
+    });
+};
+
+// Logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+    next();
+});
+
+// CORS middleware
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    credentials: true
+}));
   
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid token' });
@@ -235,38 +274,53 @@ app.post('/api/contact', async (req, res) => {
 
 // Content
 app.get('/api/content/:section', authenticateToken, async (req, res) => {
-  try {
-    let result;
-    if (useMySQL) {
-      const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [req.params.section]);
-      result = rows[0] || { content: '' };
-    } else {
-      result = { content: content[req.params.section] || '' };
+    try {
+        const section = req.params.section;
+        console.log('📥 Fetching content for section:', section);
+        
+        let result;
+        if (useMySQL) {
+            const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [section]);
+            result = rows[0] || { content: '' };
+        } else {
+            result = { content: content[section] || '' };
+        }
+        
+        console.log('📤 Sending content:', { section, content: result.content });
+        res.json(result);
+    } catch (error) {
+        console.error('❌ Error fetching content:', error);
+        res.status(500).json({ error: 'Failed to fetch content' });
     }
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch content' });
-  }
 });
 
 app.put('/api/content/:section', authenticateToken, async (req, res) => {
-  try {
-    const { content: newContent } = req.body;
-    if (!newContent) return res.status(400).json({ error: 'Content required' });
+    try {
+        const section = req.params.section;
+        const { content: newContent } = req.body;
+        
+        console.log('💾 Saving content for section:', section);
+        console.log('Content data:', newContent);
+        
+        if (newContent === undefined || newContent === null) {
+            return res.status(400).json({ error: 'Content required' });
+        }
 
-    if (useMySQL) {
-      await pool.execute(
-        'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
-        [req.params.section, newContent, newContent]
-      );
-    } else {
-      content[req.params.section] = newContent;
+        if (useMySQL) {
+            await pool.execute(
+                'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?, updated_at = CURRENT_TIMESTAMP',
+                [section, newContent, newContent]
+            );
+        } else {
+            content[section] = newContent;
+        }
+
+        console.log('✅ Content saved successfully');
+        res.json({ success: true, message: 'Content updated' });
+    } catch (error) {
+        console.error('❌ Error updating content:', error);
+        res.status(500).json({ error: 'Failed to update content' });
     }
-
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update content' });
-  }
 });
 
 app.get('/api/public/content/:section', async (req, res) => {
@@ -301,8 +355,67 @@ app.get('/api/admin/content', authenticateToken, async (req, res) => {
 
 // Upload
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  res.json({ success: true, url: `/uploads/${req.file.filename}`, filename: req.file.filename });
+    try {
+        if (!req.file) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'No file uploaded' 
+            });
+        }
+
+        console.log('📁 File uploaded:', req.file.filename);
+        
+        const fileUrl = `/uploads/${req.file.filename}`;
+        
+        res.json({ 
+            success: true, 
+            url: fileUrl, 
+            filename: req.file.filename,
+            message: 'File uploaded successfully'
+        });
+    } catch (error) {
+        console.error('❌ Upload error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Upload failed' 
+        });
+    }
+});
+
+app.get('/api/public/content/:section', async (req, res) => {
+    try {
+        const section = req.params.section;
+        console.log('🌐 Public request for section:', section);
+        
+        let result;
+        if (useMySQL) {
+            const [rows] = await pool.execute('SELECT * FROM content WHERE title = ?', [section]);
+            result = rows[0] || { content: '' };
+        } else {
+            result = { content: content[section] || '' };
+        }
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching public content:', error);
+        res.status(500).json({ error: 'Failed to fetch content' });
+    }
+});
+
+app.get('/api/admin/content', authenticateToken, async (req, res) => {
+    try {
+        let result;
+        if (useMySQL) {
+            const [rows] = await pool.execute('SELECT * FROM content ORDER BY title');
+            result = rows;
+        } else {
+            result = Object.entries(content).map(([title, content]) => ({ title, content }));
+        }
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching admin content:', error);
+        res.status(500).json({ error: 'Failed to fetch content' });
+    }
 });
 
 // Main routes

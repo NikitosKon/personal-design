@@ -319,7 +319,7 @@
         <div id="portfolio-section" class="content-section" style="display: none;">
             <div class="section-header">
                 <h2 class="section-title">Портфолио</h2>
-                <button class="add-btn" onclick="addPortfolioItem()">+ Добавить работу</button>
+                <button class="add-btn" id="add-portfolio-btn">+ Добавить работу</button>
             </div>
             
             <div id="portfolio-list">
@@ -355,5 +355,23 @@
     </div>
 
     <script src="content.js"></script>
+
+<script>
+// Добавляем обработчики после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчик для добавления работы в портфолио
+    const addPortfolioBtn = document.getElementById('add-portfolio-btn');
+    if (addPortfolioBtn) {
+        addPortfolioBtn.addEventListener('click', addPortfolioItem);
+    }
+    
+    // Обработчик для добавления услуги
+    const addServiceBtn = document.querySelector('#services-section .add-btn');
+    if (addServiceBtn && !addServiceBtn.id) {
+        addServiceBtn.addEventListener('click', addService);
+    }
+});
+</script>
+
 </body>
 </html>
