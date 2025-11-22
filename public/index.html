@@ -563,230 +563,220 @@
    ========================== */
 
 @media (max-width: 768px) {
-  /* Убираем текст названия в навигации на мобильных */
-  .brand > div:not(.logo) {
+  /* Убираем ВСЁ в навигации кроме лого и меню */
+  .brand > div:not(.logo),
+  .social-icons,
+  .nav-cta {
     display: none !important;
   }
   
-  /* Центрируем лого в навигации */
-  .brand {
-    justify-content: center;
-    flex: 0 0 auto;
-  }
-  
-  /* Улучшаем навигацию для мобильных */
+  /* Компактная навигация */
   .nav-inner {
-    padding: 8px 12px;
-    gap: 10px;
-    flex-wrap: wrap;
+    padding: 6px 12px;
+    gap: 0;
     justify-content: space-between;
   }
   
+  .brand {
+    flex: 0 0 auto;
+  }
+  
+  /* Горизонтальное меню */
   nav ul {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    margin-top: 8px;
-    gap: 12px;
+    order: 0;
+    width: auto;
+    margin-top: 0;
+    gap: 16px;
   }
   
   .nav-link {
-    font-size: 13px;
-    padding: 6px 10px;
+    font-size: 12px;
+    padding: 6px 8px;
+    white-space: nowrap;
   }
   
-  /* Улучшаем отступы для body */
+  /* Уменьшаем высоту навигации */
   body {
-    padding-top: 60px;
+    padding-top: 50px;
+  }
+  
+  header.nav {
+    top: 6px;
+  }
+  
+  /* Убираем логотип в герое на мобильных */
+  .hero-logo {
+    display: none;
   }
   
   /* Исправляем масштаб на мобильных */
   .hero {
-    padding: 40px 0 30px;
-    min-height: calc(100vh - 60px);
+    padding: 30px 0 20px;
+    min-height: calc(100vh - 50px);
   }
   
   .hero-title {
-    font-size: 32px;
+    font-size: 28px;
     line-height: 1.1;
     margin-bottom: 12px;
   }
   
   .hero-sub {
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.4;
   }
   
   /* Улучшаем кнопки на мобильных */
   .hero-cta {
-    gap: 10px;
+    gap: 8px;
     flex-direction: column;
     align-items: center;
   }
   
   .btn {
-    padding: 12px 20px;
-    font-size: 15px;
+    padding: 10px 16px;
+    font-size: 14px;
     width: 100%;
-    max-width: 280px;
+    max-width: 260px;
   }
   
   /* Улучшаем социальные иконки в герое */
   .hero-social {
-    gap: 12px;
-    margin-top: 25px;
+    gap: 10px;
+    margin-top: 20px;
   }
   
   .hero-social-icon {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
   }
   
   /* Улучшаем секции */
   section {
-    padding: 50px 0;
+    padding: 40px 0;
   }
   
   .section-title h2 {
-    font-size: 26px;
+    font-size: 24px;
   }
   
   .section-title p {
-    font-size: 15px;
+    font-size: 14px;
   }
   
   /* Улучшаем проекты в портфолио */
   .project {
-    min-height: 180px;
-    padding: 15px;
-  }
-  
-  .project-content {
+    min-height: 160px;
     padding: 12px;
   }
   
+  .project-content {
+    padding: 10px;
+  }
+  
   .project .meta {
-    font-size: 16px;
+    font-size: 15px;
   }
   
   .project p {
-    font-size: 14px;
+    font-size: 13px;
   }
   
   /* Улучшаем контактную форму */
   .contact-grid {
-    gap: 20px;
+    gap: 16px;
   }
   
   .form-control {
-    padding: 14px;
-    font-size: 16px; /* Убираем зум в iOS */
+    padding: 12px;
+    font-size: 16px;
   }
   
   /* Улучшаем футер */
   footer {
-    padding: 40px 0;
+    padding: 30px 0;
+  }
+}
+
+/* УЛУЧШЕННАЯ СИСТЕМА ЗВЁЗД ДЛЯ МОБИЛЬНЫХ */
+@media (max-width: 768px) {
+  .stars-container {
+    transform: rotateX(10deg) scale(0.8);
+  }
+  
+  .hero-grid {
+    transform: rotateX(10deg) scale(0.8);
+  }
+}
+
+/* ЗВЁЗДЫ ДЛЯ МОДАЛЬНОГО ОКНА НА МОБИЛЬНЫХ */
+@media (max-width: 768px) {
+  .fullscreen-stars-container {
+    transform: rotateX(10deg) scale(0.7);
+  }
+  
+  .fullscreen-grid {
+    transform: rotateX(10deg) scale(0.7);
   }
 }
 
 /* Дополнительные исправления для очень маленьких экранов */
 @media (max-width: 480px) {
   .hero-title {
-    font-size: 28px;
+    font-size: 24px;
   }
   
   .hero-sub {
-    font-size: 15px;
-  }
-  
-  .badge {
-    padding: 8px 12px;
     font-size: 14px;
   }
   
-  .badge small {
+  .badge {
+    padding: 6px 10px;
     font-size: 12px;
   }
   
-  /* Улучшаем навигацию на очень маленьких экранах */
+  .badge small {
+    font-size: 10px;
+  }
+  
+  /* Ещё компактнее навигация */
   .nav-inner {
-    padding: 6px 10px;
+    padding: 4px 8px;
   }
   
   nav ul {
-    gap: 8px;
+    gap: 12px;
   }
   
   .nav-link {
-    font-size: 12px;
-    padding: 5px 8px;
-  }
-  
-  .nav-cta {
-    padding: 8px 12px;
-    font-size: 12px;
+    font-size: 11px;
+    padding: 4px 6px;
   }
 }
 
-/* Исправление для вертикальной ориентации */
-@media (max-width: 768px) and (orientation: portrait) {
-  .hero {
-    transform: scale(0.95);
-    transform-origin: top center;
-  }
-  
-  .container {
-    width: calc(100% - 32px);
-  }
-}
-
-/* Исправление для горизонтальной ориентации на мобильных */
+/* ГОРИЗОНТАЛЬНАЯ ОРИЕНТАЦИЯ НА МОБИЛЬНЫХ */
 @media (max-width: 900px) and (orientation: landscape) {
   .hero {
     min-height: auto;
-    padding: 60px 0 40px;
+    padding: 40px 0 30px;
   }
   
   .hero-title {
-    font-size: 28px;
+    font-size: 24px;
   }
   
   body {
-    padding-top: 70px;
-  }
-}
-
-/* Предотвращение зума в полях ввода на iOS */
-@media (max-width: 768px) {
-  input, textarea, select {
-    font-size: 16px !important;
-  }
-}
-
-/* Улучшение читаемости текста на мобильных */
-@media (max-width: 768px) {
-  body {
-    font-size: 15px;
-    line-height: 1.5;
+    padding-top: 55px;
   }
   
-  p, li, .nav-link, .btn {
-    line-height: 1.4;
+  /* Убираем лишнее в ландшафте */
+  .hero-logo,
+  .badges {
+    display: none;
   }
-}
-
-/* Оптимизация анимаций для мобильных */
-@media (max-width: 768px) {
-  .reveal {
-    transition-duration: 0.4s;
-  }
-  
-  .feature, .service, .project {
-    transition-duration: 0.3s;
-  }
-}
-  </style>
+}  
+</style>
 </head>
 <body>
 
