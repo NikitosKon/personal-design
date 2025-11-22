@@ -51,3 +51,25 @@ router.post('/login', async (req, res) => {
 });
 
 export default router;
+
+// Временный эндпоинт для отладки - УДАЛИ ПОТОМ!
+router.get('/debug', async (req, res) => {
+  try {
+    const db = await getPool();
+    
+    // Проверяем таблицу admins
+    const [admins] = await db.query('SELECT * FROM admins');
+    
+    // Проверяем структуру таблицы
+    const [structure] = await db.query('DESCRIBE admins');
+    
+    res.json({
+      admins: admins,
+      table_structure: structure,
+      message: admins.length > 0 ? 'Users found' : 'No users in admins table'
+    });
+    
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
