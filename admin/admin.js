@@ -1,6 +1,6 @@
 
 
-const API_BASE = 'https://personal-design.eu/api';
+const API_BASE = '/api';
 
 let currentToken = localStorage.getItem('adminToken');
 

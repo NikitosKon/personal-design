@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here-make-it-very-long-and-secure';
 
 // ES модули не имеют __dirname, поэтому создаем его
 const __filename = fileURLToPath(import.meta.url);
@@ -58,9 +58,9 @@ const upload = multer({
 const dbPath = path.join(__dirname, 'database.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error opening database:', err.message);
+    console.error('❌ Error opening database:', err.message);
   } else {
-    console.log('Connected to SQLite database.');
+    console.log('✅ Connected to SQLite database.');
     
     // Создаем таблицу сообщений
     db.run(`CREATE TABLE IF NOT EXISTS messages (
@@ -82,9 +82,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`, (err) => {
       if (err) {
-        console.error('Error creating content table:', err);
+        console.error('❌ Error creating content table:', err);
       } else {
-        console.log('Content table ready');
+        console.log('✅ Content table ready');
         
         // Начальные данные
         const initialContent = [
@@ -125,17 +125,24 @@ const db = new sqlite3.Database(dbPath, (err) => {
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`, (err) => {
+    )`, async (err) => {
       if (err) {
-        console.error('Error creating admin table:', err);
+        console.error('❌ Error creating admin table:', err);
       } else {
-        console.log('Admin table ready');
+        console.log('✅ Admin table ready');
         
-        // Создаем администратора по умолчанию
-        const defaultPassword = bcrypt.hashSync('admin123', 10);
+        // Всегда создаем/обновляем администратора по умолчанию
+        const defaultPassword = await bcrypt.hash('admin123', 10);
         db.run(
-          'INSERT OR IGNORE INTO admin (username, password) VALUES (?, ?)',
-          ['admin', defaultPassword]
+          'INSERT OR REPLACE INTO admin (username, password) VALUES (?, ?)',
+          ['admin', defaultPassword],
+          function(err) {
+            if (err) {
+              console.error('❌ Error creating admin user:', err);
+            } else {
+              console.log('✅ Default admin created: admin / admin123');
+            }
+          }
         );
       }
     });
@@ -165,8 +172,10 @@ function authenticateToken(req, res, next) {
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('🔐 Login attempt for user:', username);
 
     if (!username || !password) {
+      console.log('❌ Missing credentials');
       return res.status(400).json({ error: 'Username and password required' });
     }
 
@@ -175,16 +184,23 @@ app.post('/api/admin/login', async (req, res) => {
       [username],
       async (err, user) => {
         if (err) {
-          console.error('Database error:', err);
+          console.error('❌ Database error:', err);
           return res.status(500).json({ error: 'Internal server error' });
         }
 
+        console.log('👤 User found:', user ? 'Yes' : 'No');
+        
         if (!user) {
+          console.log('❌ User not found in database:', username);
           return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        console.log('🔑 Comparing passwords...');
         const validPassword = await bcrypt.compare(password, user.password);
+        console.log('✅ Password valid:', validPassword);
+
         if (!validPassword) {
+          console.log('❌ Invalid password for user:', username);
           return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -194,6 +210,8 @@ app.post('/api/admin/login', async (req, res) => {
           { expiresIn: '24h' }
         );
 
+        console.log('🎉 Login successful for:', username);
+        
         res.json({
           success: true,
           token,
@@ -202,7 +220,7 @@ app.post('/api/admin/login', async (req, res) => {
       }
     );
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('💥 Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -214,6 +232,171 @@ app.get('/api/admin/verify', authenticateToken, (req, res) => {
   });
 });
 
+// ==================== МАРШРУТ ДЛЯ СОЗДАНИЯ/ИЗМЕНЕНИЯ АДМИНИСТРАТОРОВ ====================
+
+app.post('/api/admin/create', authenticateToken, async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    console.log('🔧 Creating/updating admin user:', username);
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    db.run(
+      'INSERT OR REPLACE INTO admin (username, password) VALUES (?, ?)',
+      [username, hashedPassword],
+      function(err) {
+        if (err) {
+          console.error('❌ Error creating admin:', err);
+          return res.status(500).json({ error: 'Failed to create admin user' });
+        }
+
+        console.log('✅ Admin user created/updated successfully:', username);
+        res.json({ 
+          success: true, 
+          message: 'Admin user created/updated successfully',
+          username: username,
+          id: this.lastID
+        });
+      }
+    );
+  } catch (error) {
+    console.error('💥 Create admin error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Маршрут для получения всех администраторов
+app.get('/api/admin/users', authenticateToken, (req, res) => {
+  db.all('SELECT id, username FROM admin', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
+// Маршрут для удаления администратора
+app.delete('/api/admin/users/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  
+  db.run('DELETE FROM admin WHERE id = ?', [id], function(err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Admin user not found' });
+    }
+    
+    res.json({ success: true, message: 'Admin user deleted successfully' });
+  });
+});
+
+// ==================== МАРШРУТЫ ДЛЯ ОТЛАДКИ И АДМИНИСТРИРОВАНИЯ ====================
+
+app.post('/api/admin/create', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    console.log('🔧 Creating admin user:', username);
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    db.run(
+      'INSERT OR REPLACE INTO admin (username, password) VALUES (?, ?)',
+      [username, hashedPassword],
+      function(err) {
+        if (err) {
+          console.error('❌ Error creating admin:', err);
+          return res.status(500).json({ error: 'Failed to create admin user' });
+        }
+
+        console.log('✅ Admin user created successfully:', username);
+        res.json({ 
+          success: true, 
+          message: 'Admin user created successfully',
+          username: username,
+          id: this.lastID
+        });
+      }
+    );
+  } catch (error) {
+    console.error('💥 Create admin error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/admin/debug', (req, res) => {
+  db.all('SELECT id, username FROM admin', (err, users) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    
+    db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      
+      console.log('📊 Debug info - Users:', users, 'Tables:', tables);
+      
+      res.json({ 
+        success: true, 
+        users: users,
+        tables: tables,
+        userCount: users.length
+      });
+    });
+  });
+});
+
+app.get('/api/admin/diagnose', (req, res) => {
+  console.log('🔍 Running full diagnosis...');
+  
+  // Проверяем существование таблиц
+  db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    
+    console.log('📋 Tables in database:', tables);
+    
+    // Проверяем администраторов
+    db.all('SELECT * FROM admin', (err, admins) => {
+      if (err) {
+        console.log('❌ Admin table error:', err);
+        return res.json({ 
+          success: false,
+          tables: tables,
+          adminTable: 'ERROR - ' + err.message 
+        });
+      }
+      
+      // Проверяем сообщения
+      db.all('SELECT COUNT(*) as count FROM messages', (err, messageCount) => {
+        res.json({
+          success: true,
+          tables: tables,
+          admins: admins,
+          adminCount: admins.length,
+          messageCount: messageCount[0].count,
+          serverTime: new Date().toISOString(),
+          jwtSecret: JWT_SECRET ? 'Set' : 'Not set'
+        });
+      });
+    });
+  });
+});
+
 // ==================== МАРШРУТЫ СООБЩЕНИЙ ====================
 
 app.get('/api/messages', authenticateToken, (req, res) => {
@@ -221,7 +404,7 @@ app.get('/api/messages', authenticateToken, (req, res) => {
     'SELECT * FROM messages ORDER BY created_at DESC',
     (err, rows) => {
       if (err) {
-        console.error('Error fetching messages:', err);
+        console.error('❌ Error fetching messages:', err);
         return res.status(500).json({ error: 'Failed to fetch messages' });
       }
       res.json(rows);
@@ -244,11 +427,11 @@ app.post('/api/contact', async (req, res) => {
       [name, email, project, message || ''],
       function(err) {
         if (err) {
-          console.error('Error saving message:', err);
+          console.error('❌ Error saving message:', err);
           return res.status(500).json({ error: 'Failed to save message' });
         }
 
-        console.log(`New message from ${name} (${email}): ${project}`);
+        console.log(`✅ New message from ${name} (${email}): ${project}`);
 
         res.json({ 
           success: true, 
@@ -258,7 +441,7 @@ app.post('/api/contact', async (req, res) => {
       }
     );
   } catch (error) {
-    console.error('Contact form error:', error);
+    console.error('💥 Contact form error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -276,7 +459,7 @@ app.put('/api/messages/:id', authenticateToken, (req, res) => {
     [status, id],
     function(err) {
       if (err) {
-        console.error('Error updating message:', err);
+        console.error('❌ Error updating message:', err);
         return res.status(500).json({ error: 'Failed to update message' });
       }
 
@@ -297,7 +480,7 @@ app.delete('/api/messages/:id', authenticateToken, (req, res) => {
     [id],
     function(err) {
       if (err) {
-        console.error('Error deleting message:', err);
+        console.error('❌ Error deleting message:', err);
         return res.status(500).json({ error: 'Failed to delete message' });
       }
 
@@ -321,7 +504,7 @@ app.get('/api/content/:section', authenticateToken, async (req, res) => {
       [section],
       (err, content) => {
         if (err) {
-          console.error('Error fetching content:', err);
+          console.error('❌ Error fetching content:', err);
           return res.status(500).json({ error: 'Failed to fetch content' });
         }
         
@@ -333,7 +516,7 @@ app.get('/api/content/:section', authenticateToken, async (req, res) => {
       }
     );
   } catch (error) {
-    console.error('Error in content route:', error);
+    console.error('💥 Error in content route:', error);
     res.status(500).json({ error: 'Failed to fetch content' });
   }
 });
@@ -352,7 +535,7 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
       [section],
       (err, existing) => {
         if (err) {
-          console.error('Error checking existing content:', err);
+          console.error('❌ Error checking existing content:', err);
           return res.status(500).json({ error: 'Failed to update content' });
         }
 
@@ -362,7 +545,7 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
             [content, section],
             function(err) {
               if (err) {
-                console.error('Error updating content:', err);
+                console.error('❌ Error updating content:', err);
                 return res.status(500).json({ error: 'Failed to update content' });
               }
               res.json({ success: true });
@@ -374,7 +557,7 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
             [section, content],
             function(err) {
               if (err) {
-                console.error('Error creating content:', err);
+                console.error('❌ Error creating content:', err);
                 return res.status(500).json({ error: 'Failed to create content' });
               }
               res.json({ success: true });
@@ -384,7 +567,7 @@ app.put('/api/content/:section', authenticateToken, async (req, res) => {
       }
     );
   } catch (error) {
-    console.error('Error updating content:', error);
+    console.error('💥 Error updating content:', error);
     res.status(500).json({ error: 'Failed to update content' });
   }
 });
@@ -398,7 +581,7 @@ app.get('/api/public/content/:section', async (req, res) => {
       [section],
       (err, content) => {
         if (err) {
-          console.error('Error fetching public content:', err);
+          console.error('❌ Error fetching public content:', err);
           return res.status(500).json({ error: 'Failed to fetch content' });
         }
         
@@ -410,7 +593,7 @@ app.get('/api/public/content/:section', async (req, res) => {
       }
     );
   } catch (error) {
-    console.error('Error in public content route:', error);
+    console.error('💥 Error in public content route:', error);
     res.status(500).json({ error: 'Failed to fetch content' });
   }
 });
@@ -420,7 +603,7 @@ app.get('/api/admin/content', authenticateToken, (req, res) => {
     'SELECT * FROM content ORDER BY title',
     (err, rows) => {
       if (err) {
-        console.error('Error fetching all content:', err);
+        console.error('❌ Error fetching all content:', err);
         return res.status(500).json({ error: 'Failed to fetch content' });
       }
       res.json(rows);
@@ -441,6 +624,8 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
 
     const fileUrl = `/uploads/${req.file.filename}`;
     
+    console.log('✅ File uploaded:', req.file.filename);
+    
     res.json({ 
       success: true, 
       message: 'File uploaded successfully',
@@ -448,7 +633,7 @@ app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => 
       filename: req.file.filename
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('💥 Upload error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'File upload failed' 
@@ -466,28 +651,39 @@ app.get('/admin/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
 
+// Тестовый маршрут
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: '✅ Server is working!',
+    timestamp: new Date().toISOString(),
+    version: '2.0'
+  });
+});
+
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error('💥 Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Main site: http://localhost:${PORT}`);
-  console.log(`Admin panel: http://localhost:${PORT}/admin`);
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`🌐 Main site: http://localhost:${PORT}`);
+  console.log(`🔧 Admin panel: http://localhost:${PORT}/admin`);
+  console.log(`📊 API test: http://localhost:${PORT}/api/test`);
+  console.log(`🔍 Diagnosis: http://localhost:${PORT}/api/admin/diagnose`);
 });
 
 process.on('SIGINT', () => {
-  console.log('\nShutting down server...');
+  console.log('\n🛑 Shutting down server...');
   db.close((err) => {
     if (err) {
-      console.error('Error closing database:', err);
+      console.error('❌ Error closing database:', err);
     } else {
-      console.log('Database connection closed.');
+      console.log('✅ Database connection closed.');
     }
     process.exit(0);
   });
