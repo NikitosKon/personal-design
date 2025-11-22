@@ -524,9 +524,8 @@ async function loadSectionData(section) {
         
         switch(section) {
             case 'hero':
-                document.getElementById('hero-title').value = data.content || '';
-                document.getElementById('hero-subtitle').value = data.content || '';
-                break;
+  // hero_title и hero_subtitle загружаются отдельно в loadContent
+  break;
             case 'services':
                 loadServices(data.content);
                 break;
