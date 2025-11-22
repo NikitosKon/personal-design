@@ -9,6 +9,7 @@ import multer from 'multer';
 import fs from 'fs';
 import uploadRoutes from './routes/upload.js';
 import messagesRoutes from './routes/messages.js';
+import adminRoutes from './routes/admin.js'; // ← ДОБАВИТЬ
 import dotenv from 'dotenv';
 
 dotenv.config();
