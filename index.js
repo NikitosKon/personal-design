@@ -22,10 +22,10 @@ console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
 
 // MySQL connection
 const pool = mysql.createPool({
-  uri: process.env.DATABASE_URL,
-  connectionLimit: 10
+  uri: process.env.MYSQL_PUBLIC_URL,  // ← ИСПОЛЬЗУЙ ЭТУ ПЕРЕМЕННУЮ
+  connectionLimit: 10,
+  ssl: { rejectUnauthorized: false }
 });
-
 // Middleware
 app.use(cors());
 app.use(express.json());
