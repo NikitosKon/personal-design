@@ -558,85 +558,83 @@
     .services-grid{grid-template-columns:repeat(2,1fr)}
     .contact-grid{grid-template-columns:1fr}
   }
-  @media (max-width:760px){
-  :root {
-    --nav-h: 60px; /* Уменьшаем высоту на мобильных */
+  /* ==========================
+   МОБИЛЬНЫЕ ИСПРАВЛЕНИЯ
+   ========================== */
+
+@media (max-width: 768px) {
+  /* Убираем текст названия в навигации на мобильных */
+  .brand > div:not(.logo) {
+    display: none !important;
   }
   
-  header.nav {
-    top: 8px;
-  }
-  
-  .nav-inner {
-    padding: 6px 10px;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
+  /* Центрируем лого в навигации */
   .brand {
-    flex: 1;
-    min-width: 0;
-    gap: 8px;
+    justify-content: center;
+    flex: 0 0 auto;
   }
   
-  .brand .logo {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
+  /* Улучшаем навигацию для мобильных */
+  .nav-inner {
+    padding: 8px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
   }
   
-  .brand > div {
-    min-width: 0;
-  }
-  
-  .brand > div > div:first-child {
-    font-size: 14px;
-    line-height: 1.2;
-  }
-  
-  .brand > div > div:last-child {
-    font-size: 10px;
-    line-height: 1.2;
-  }
-  
-  /* Компактное меню навигации */
   nav ul {
-    gap: 8px;
     order: 3;
     width: 100%;
     justify-content: center;
-    margin-top: 6px;
-    flex-wrap: wrap;
+    margin-top: 8px;
+    gap: 12px;
   }
   
   .nav-link {
-    font-size: 12px;
-    padding: 6px 8px;
+    font-size: 13px;
+    padding: 6px 10px;
   }
   
-  /* Кнопка CTA и соцсети */
-  .nav-cta {
-    padding: 8px 12px;
-    font-size: 12px;
-    order: 2;
+  /* Улучшаем отступы для body */
+  body {
+    padding-top: 60px;
   }
   
-  .social-icons {
-    display: none; /* Скрываем соцсети в навигации на мобильных */
-  }
-  
-  /* Остальные существующие стили */
+  /* Исправляем масштаб на мобильных */
   .hero {
-    padding: 50px 0 30px;
+    padding: 40px 0 30px;
+    min-height: calc(100vh - 60px);
   }
   
   .hero-title {
-    font-size: 28px;
+    font-size: 32px;
+    line-height: 1.1;
+    margin-bottom: 12px;
   }
   
-  .features, .services-grid, .portfolio-grid {
-    grid-template-columns: 1fr;
+  .hero-sub {
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  
+  /* Улучшаем кнопки на мобильных */
+  .hero-cta {
+    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn {
+    padding: 12px 20px;
+    font-size: 15px;
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  /* Улучшаем социальные иконки в герое */
+  .hero-social {
+    gap: 12px;
+    margin-top: 25px;
   }
   
   .hero-social-icon {
@@ -644,35 +642,150 @@
     height: 44px;
     font-size: 18px;
   }
+  
+  /* Улучшаем секции */
+  section {
+    padding: 50px 0;
+  }
+  
+  .section-title h2 {
+    font-size: 26px;
+  }
+  
+  .section-title p {
+    font-size: 15px;
+  }
+  
+  /* Улучшаем проекты в портфолио */
+  .project {
+    min-height: 180px;
+    padding: 15px;
+  }
+  
+  .project-content {
+    padding: 12px;
+  }
+  
+  .project .meta {
+    font-size: 16px;
+  }
+  
+  .project p {
+    font-size: 14px;
+  }
+  
+  /* Улучшаем контактную форму */
+  .contact-grid {
+    gap: 20px;
+  }
+  
+  .form-control {
+    padding: 14px;
+    font-size: 16px; /* Убираем зум в iOS */
+  }
+  
+  /* Улучшаем футер */
+  footer {
+    padding: 40px 0;
+  }
 }
 
-/* Дополнительные улучшения для очень маленьких экранов */
+/* Дополнительные исправления для очень маленьких экранов */
 @media (max-width: 480px) {
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  .hero-sub {
+    font-size: 15px;
+  }
+  
+  .badge {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  
+  .badge small {
+    font-size: 12px;
+  }
+  
+  /* Улучшаем навигацию на очень маленьких экранах */
   .nav-inner {
-    padding: 4px 8px;
+    padding: 6px 10px;
   }
   
   nav ul {
-    gap: 6px;
+    gap: 8px;
   }
   
   .nav-link {
-    font-size: 11px;
-    padding: 5px 6px;
+    font-size: 12px;
+    padding: 5px 8px;
   }
   
-  .brand > div > div:first-child {
-    font-size: 13px;
-  }
-  
-  .brand > div > div:last-child {
-    font-size: 9px;
+  .nav-cta {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 }
-  @media (prefers-reduced-motion: reduce){
-    *{transition:none!important;animation:none!important}
-    .reveal{transition:none;transform:none;opacity:1}
+
+/* Исправление для вертикальной ориентации */
+@media (max-width: 768px) and (orientation: portrait) {
+  .hero {
+    transform: scale(0.95);
+    transform-origin: top center;
   }
+  
+  .container {
+    width: calc(100% - 32px);
+  }
+}
+
+/* Исправление для горизонтальной ориентации на мобильных */
+@media (max-width: 900px) and (orientation: landscape) {
+  .hero {
+    min-height: auto;
+    padding: 60px 0 40px;
+  }
+  
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  body {
+    padding-top: 70px;
+  }
+}
+
+/* Предотвращение зума в полях ввода на iOS */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Улучшение читаемости текста на мобильных */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  
+  p, li, .nav-link, .btn {
+    line-height: 1.4;
+  }
+}
+
+/* Оптимизация анимаций для мобильных */
+@media (max-width: 768px) {
+  .reveal {
+    transition-duration: 0.4s;
+  }
+  
+  .feature, .service, .project {
+    transition-duration: 0.3s;
+  }
+}
   </style>
 </head>
 <body>
@@ -1884,175 +1997,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.textContent = expanded ? "Show less" : "See all projects";
   });
 });
-</script>
-
-<script>
-// Загрузка динамического контента
-async function loadDynamicContent() {
-  try {
-    console.log('Loading dynamic content for main site...');
-    
-    // ИСПРАВЛЕНО: используем публичные маршруты
-    const [heroTitleRes, heroSubtitleRes, servicesRes, portfolioRes, contactRes] = await Promise.all([
-      fetch('/api/public/content/hero_title'),
-      fetch('/api/public/content/hero_subtitle'),
-      fetch('/api/public/content/services'),
-      fetch('/api/public/content/portfolio'),
-      fetch('/api/public/content/contact_info')
-    ]);
-
-    const heroTitleData = await heroTitleRes.json();
-    const heroSubtitleData = await heroSubtitleRes.json();
-    const servicesData = await servicesRes.json();
-    const portfolioData = await portfolioRes.json();
-    const contactData = await contactRes.json();
-
-    console.log('Content loaded:', {
-      heroTitle: heroTitleData,
-      heroSubtitle: heroSubtitleData,
-      services: servicesData,
-      portfolio: portfolioData,
-      contact: contactData
-    });
-
-    // Обновляем контент на странице
-    if (heroTitleData.content) {
-      const heroHeading = document.getElementById('hero-heading');
-      if (heroHeading) {
-        heroHeading.textContent = heroTitleData.content;
-      }
-    }
-    
-    if (heroSubtitleData.content) {
-      const heroSub = document.querySelector('.hero-sub');
-      if (heroSub) {
-        heroSub.textContent = heroSubtitleData.content;
-      }
-    }
-
-    // Обновляем услуги
-    if (servicesData.content) {
-      try {
-        const services = JSON.parse(servicesData.content);
-        updateServices(services);
-      } catch (e) {
-        console.error('Error parsing services:', e);
-      }
-    }
-
-    // Обновляем портфолио
-    if (portfolioData.content) {
-      try {
-        const portfolio = JSON.parse(portfolioData.content);
-        updatePortfolio(portfolio);
-      } catch (e) {
-        console.error('Error parsing portfolio:', e);
-      }
-    }
-
-    // Обновляем контакты
-    if (contactData.content) {
-      try {
-        const contact = JSON.parse(contactData.content);
-        updateContactInfo(contact);
-      } catch (e) {
-        console.error('Error parsing contact info:', e);
-      }
-    }
-
-    console.log('Dynamic content applied successfully');
-
-  } catch (error) {
-    console.error('Error loading dynamic content:', error);
-  }
-}
-
-function updateServices(services) {
-  const container = document.querySelector('.services-grid');
-  if (!container || !services || services.length === 0) return;
-
-  container.innerHTML = services.map(service => `
-    <div class="service reveal">
-      <div class="icon"><i class="${service.icon || 'fas fa-star'}"></i></div>
-      <h4>${service.title || 'Service'}</h4>
-      <p>${service.description || ''}</p>
-    </div>
-  `).join('');
-
-  // Реинициализируем анимации для новых элементов
-  setTimeout(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.service.reveal').forEach(el => {
-      observer.observe(el);
-    });
-  }, 100);
-}
-
-function updatePortfolio(portfolio) {
-  const container = document.querySelector('.portfolio-grid');
-  if (!container || !portfolio || portfolio.length === 0) return;
-
-  container.innerHTML = portfolio.map((item, index) => `
-    <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
-             aria-label="${item.title || 'Project'}" 
-             style="${index >= 3 ? 'display: none;' : ''}">
-      <div class="project-bg" style="background-image: url('${item.image || ''}');"></div>
-      <div class="project-content">
-        <div class="meta">${item.title || 'Project'}</div>
-        <p>${item.description || ''}</p>
-      </div>
-    </article>
-  `).join('');
-
-  // Реинициализируем анимации
-  setTimeout(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.project.reveal').forEach(el => {
-      observer.observe(el);
-    });
-  }, 100);
-}
-
-function updateContactInfo(contact) {
-  if (contact.email) {
-    const emailLink = document.querySelector('a[href^="mailto:"]');
-    if (emailLink) {
-      emailLink.href = `mailto:${contact.email}`;
-      emailLink.textContent = contact.email;
-    }
-  }
-  
-  if (contact.phone) {
-    const phoneElement = document.querySelector('p:has(.fa-phone) span');
-    if (phoneElement) {
-      phoneElement.textContent = contact.phone;
-    }
-  }
-  
-  if (contact.address) {
-    const addressElement = document.querySelector('p:has(.fa-map-marker-alt) span');
-    if (addressElement) {
-      addressElement.textContent = contact.address;
-    }
-  }
-}
-
-// Загружаем контент при загрузке страницы
-document.addEventListener('DOMContentLoaded', loadDynamicContent);
 </script>
 
 <script>
