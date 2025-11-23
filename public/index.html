@@ -1862,6 +1862,21 @@ const project = formData.get('project')?.trim();
       font-size: 18px;
     }
   }
+
+.portfolio-grid.show-all {
+  position: relative;
+  z-index: 5;
+}
+
+.show-more-btn {
+  position: relative;
+  z-index: 10;
+}
+
+.portfolio-grid .project {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
 </style>
 
 <script>
