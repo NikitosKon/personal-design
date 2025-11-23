@@ -1159,51 +1159,48 @@
 </script>
 
 <script>
-// ИСПРАВЛЕННАЯ СИСТЕМА ЗВЕЗД С ФИКСОМ ДЛЯ МОБИЛЬНЫХ
-function initializeStarSystem() {
+// СИСТЕМА ОДНОЙ ЗВЕЗДЫ
+function initializeSingleStar() {
     const container = document.getElementById('stars-container');
     if (!container) return;
     
-    console.log('⭐ Запускаем звездную систему...');
+    console.log('⭐ Запускаем систему ОДНОЙ звезды...');
     
     // Очищаем контейнер
     container.innerHTML = '';
     
-    function createRandomStar() {
-        // Очищаем только если звезд слишком много
-        if (container.children.length > 2) { // ⬅️ УМЕНЬШИЛ ДО 2
-            container.innerHTML = '';
-        }
+    function createSingleStar() {
+        // ⚡ ВСЕГДА ОЧИЩАЕМ ПРЕДЫДУЩУЮ ЗВЕЗДУ
+        container.innerHTML = '';
         
         const star = document.createElement('div');
         star.className = 'star';
         
-        // ⚡ ИСПРАВЛЕНИЕ ДЛЯ МОБИЛЬНЫХ:
+        // Рандомная линия из grid'а
         const isMobile = window.innerWidth < 768;
-        const gridSize = isMobile ? 30 : 60; // ⬅️ УВЕЛИЧИЛ С 15 ДО 30
+        const gridSize = isMobile ? 30 : 60;
         const containerWidth = window.innerWidth;
         const totalLines = Math.floor(containerWidth / gridSize);
         
         // Гарантируем валидные линии
-        const startLine = isMobile ? 2 : 4;   // ⬅️ МЕНЬШЕ ЛИНИЙ НА МОБИЛЬНЫХ
+        const startLine = isMobile ? 2 : 4;
         const endLine = isMobile ? totalLines - 2 : totalLines - 4;
         
+        let linePosition;
         if (endLine <= startLine) {
-            // Если линии не валидны, используем центральную
-            const linePosition = Math.floor(containerWidth / 2);
-            star.style.left = linePosition + 'px';
+            linePosition = Math.floor(containerWidth / 2);
         } else {
             const lineIndex = Math.floor(Math.random() * (endLine - startLine)) + startLine;
-            const linePosition = lineIndex * gridSize;
-            star.style.left = linePosition + 'px';
+            linePosition = lineIndex * gridSize;
         }
         
+        star.style.left = linePosition + 'px';
         star.style.top = '-30px';
         star.style.width = isMobile ? '2px' : '1px';
-        star.style.height = (isMobile ? 40 : 40) + 'px'; // ⬅️ УМЕНЬШИЛ ВЫСОТУ
+        star.style.height = '40px';
         
-        // ⚡ НАСТРОЙКИ ЦВЕТА И GLOW:
-        const starColor = '77, 180, 255';
+        // ЦВЕТ И GLOW
+        const starColor = '255, 255, 255'; // Белый
         star.style.background = `linear-gradient(to bottom, 
             transparent 0%, 
             rgba(${starColor},0.4) 20%, 
@@ -1213,60 +1210,39 @@ function initializeStarSystem() {
         
         star.style.borderRadius = '50%';
         star.style.opacity = '0';
-        
-        // ⚡ GLOW ЭФФЕКТ (МЕНЬШЕ НА МОБИЛЬНЫХ):
         star.style.filter = isMobile ? 'blur(0.5px) brightness(2)' : 'blur(0.8px) brightness(3)';
-        star.style.boxShadow = isMobile ? 
-            `0 0 8px rgba(${starColor}, 0.5)` : // ⬅️ МЕНЬШЕ GLOW НА МОБИЛЬНЫХ
-            `0 0 10px rgba(${starColor}, 0.6),
-             0 0 20px rgba(${starColor}, 0.4),
-             0 0 30px rgba(${starColor}, 0.2)`;
-        
+        star.style.boxShadow = `0 0 10px rgba(${starColor}, 0.6)`;
         star.style.position = 'absolute';
         star.style.zIndex = '1';
         
-        // ⚡ РЕЖЕ ЗВЕЗДЫ НА МОБИЛЬНЫХ:
+        // Анимация
         const duration = 1.5 + Math.random() * 1;
         star.style.animation = `starFall ${duration}s ease-out forwards`;
         
         container.appendChild(star);
         
-        // Удаляем звезду после анимации
+        console.log(`⭐ Звезда создана на линии ${linePosition}px`);
+        
+        // ⚡ СОЗДАЕМ СЛЕДУЮЩУЮ ЗВЕЗДУ ПОСЛЕ ТОЧНОЙ ЗАДЕРЖКИ
         setTimeout(() => {
-            if (star.parentNode) {
-                star.parentNode.removeChild(star);
-            }
-        }, duration * 1000);
+            createSingleStar();
+        }, 3000); // ⬅️ НОВАЯ ЗВЕЗДА ЧЕРЕЗ 3 СЕКУНДЫ
     }
     
-    // ⚡ РЕЖЕ ЗАПУСК НА МОБИЛЬНЫХ:
-    const isMobile = window.innerWidth < 768;
-    const launchInterval = isMobile ? 4000 + Math.random() * 3000 : 2000 + Math.random() * 2000;
-    
-    // Запускаем звезды
-    const starInterval = setInterval(() => {
-        createRandomStar();
-    }, launchInterval);
-    
-    // Первая звезда
+    // Запускаем первую звезду
     setTimeout(() => {
-        createRandomStar();
+        createSingleStar();
     }, 1000);
-    
-    // Останавливаем при уходе со страницы
-    window.addEventListener('beforeunload', () => {
-        clearInterval(starInterval);
-    });
     
     // Перезапуск при изменении размера окна
     window.addEventListener('resize', () => {
-        setTimeout(initializeStarSystem, 500);
+        setTimeout(initializeSingleStar, 500);
     });
 }
 
 // Запуск при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeStarSystem, 1000);
+    setTimeout(initializeSingleStar, 1000);
 });
 </script>
 
