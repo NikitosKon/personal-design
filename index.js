@@ -8,6 +8,7 @@ import messagesRoutes from './routes/messages.js';
 import adminRoutes from './routes/admin.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import multer from 'multer';
 import fs from 'fs';
 
 dotenv.config();
@@ -24,52 +25,6 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin'));
 app.use('/uploads', express.static('uploads'));
-
-app.post('/api/upload/video', authenticateToken, async (req, res) => {
-    try {
-        if (!req.files || !req.files.video) {
-            return res.status(400).json({ success: false, error: 'No video file uploaded' });
-        }
-
-        const videoFile = req.files.video;
-        
-        // Проверка типа файла
-        const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
-        if (!allowedTypes.includes(videoFile.mimetype)) {
-            return res.status(400).json({ success: false, error: 'Invalid file type' });
-        }
-
-        // Проверка размера (100MB максимум)
-        if (videoFile.size > 100 * 1024 * 1024) {
-            return res.status(400).json({ success: false, error: 'File too large' });
-        }
-
-        // Генерируем уникальное имя файла
-        const fileExtension = path.extname(videoFile.name);
-        const fileName = `video_${Date.now()}${fileExtension}`;
-        const filePath = path.join(__dirname, 'uploads/videos', fileName);
-
-        // Создаем папку если нет
-        const videosDir = path.join(__dirname, 'uploads/videos');
-        if (!fs.existsSync(videosDir)) {
-            fs.mkdirSync(videosDir, { recursive: true });
-
-
-        }
-
-        // Сохраняем файл
-        await videoFile.mv(filePath);
-
-        res.json({
-            success: true,
-            url: `/uploads/videos/${fileName}`,
-            message: 'Video uploaded successfully'
-        });
-    } catch (error) {
-        console.error('Video upload error:', error);
-        res.status(500).json({ success: false, error: 'Upload failed' });
-    }
-});
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
@@ -140,6 +95,9 @@ app.post('/api/upload', authenticateToken, upload.single('image'), async (req, r
     res.status(500).json({ success: false, error: 'Upload failed' });
   }
 });
+
+// УДАЛИ endpoint для видео - он использует express-fileupload который у тебя не установлен
+// Если нужна загрузка видео, используй multer как выше
 
 // Routes
 app.use('/api/upload', uploadRoutes);
