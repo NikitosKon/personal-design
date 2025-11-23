@@ -24,9 +24,6 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin'));
 app.use('/uploads', express.static('uploads'));
-app.use(fileUpload({
-    createParentPath: true
-}));
 
 app.post('/api/upload/video', authenticateToken, async (req, res) => {
     try {
