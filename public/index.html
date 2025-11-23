@@ -665,10 +665,29 @@
     font-size: 14px;
   }
   
+  @media (max-width: 768px) {
   /* Улучшаем проекты в портфолио */
-  .project {
-    min-height: 160px;
-    padding: 12px;
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  /* Показываем только ПЕРВЫЙ проект на мобильных */
+  .portfolio-grid .project:not(:first-child) {
+    display: none !important;
+  }
+  
+  .portfolio-grid .project:first-child {
+    display: flex !important;
+    min-height: 300px;
+    margin-bottom: 0;
+  }
+  
+  /* Когда показываем все проекты */
+  .portfolio-grid.show-all .project {
+    display: flex !important;
+    min-height: 220px;
+    margin-bottom: 16px;
   }
   
   .project-content {
@@ -682,6 +701,7 @@
   .project p {
     font-size: 13px;
   }
+}
   
   /* Улучшаем контактную форму */
   .contact-grid {
@@ -953,7 +973,7 @@
   </div>
 
   <div style="text-align:center;margin-top:18px">
-    <a class="btn" href="javascript:void(0)" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</a>
+    <button class="btn show-more-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</button>
   </div>
 </section>
 
@@ -2095,6 +2115,46 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   loadDynamicContent();
 });
+
+// Функция для мобильного портфолио
+function initPortfolioToggle() {
+  const showMoreBtn = document.querySelector('.show-more-btn');
+  const portfolioGrid = document.querySelector('.portfolio-grid');
+  
+  if (!showMoreBtn || !portfolioGrid) return;
+  
+  let isExpanded = false;
+  
+  showMoreBtn.addEventListener('click', function() {
+    isExpanded = !isExpanded;
+    
+    if (isExpanded) {
+      portfolioGrid.classList.add('show-all');
+      showMoreBtn.textContent = 'Show less';
+    } else {
+      portfolioGrid.classList.remove('show-all');
+      showMoreBtn.textContent = 'See all projects';
+    }
+  });
+  
+  if (window.innerWidth <= 768) {
+    portfolioGrid.classList.remove('show-all');
+  }
+}
+
+window.addEventListener('resize', function() {
+  const portfolioGrid = document.querySelector('.portfolio-grid');
+  if (window.innerWidth <= 768) {
+    portfolioGrid.classList.remove('show-all');
+  } else {
+    portfolioGrid.classList.add('show-all');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  initPortfolioToggle();
+});
+
 </script>
 
 </body>
