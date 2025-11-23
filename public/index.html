@@ -1157,127 +1157,132 @@
     });
   }
 </script>
+
 <script>
-// STAR ANIMATION SYSTEM
-  const starsContainer = document.getElementById('stars-container');
-  
-  // Настройки для 5 звезд одновременно
-  const starSettings = {
-    starsPerLaunch: 1,
-    launchInterval: 2000, // ИЗМЕНИЛ: 2000мс = 2 секунды
-    maxConcurrent: 5,
-    currentCount: 0
-  };
-
-  function calculateStarLines() {
-  function calculateStarLines() {
-  const gridSize = window.innerWidth < 768 ? 15 : 60;
-  const containerWidth = window.innerWidth;
-  const totalLines = Math.floor(containerWidth / gridSize);
-  
-  const starLines = [];
-  
-  // Гарантируем хотя бы 3 линии
-  const startLine = Math.max(2, 4);
-  const endLine = Math.min(totalLines - 2, totalLines - 4);
-  
-  for (let i = startLine; i < endLine; i++) {
-    if (i * gridSize < containerWidth - gridSize) {
-      starLines.push(i * gridSize);
-    }
-  }
-  
-  // Если массив пустой, добавляем центральную линию
-  if (starLines.length === 0) {
-    starLines.push(Math.floor(containerWidth / 2));
-  }
-  
-  return starLines;
-}
-
-function createStar(linePosition) {
-  const star = document.createElement('div');
-  star.className = 'star';
-  star.style.left = linePosition + 'px';
-  star.style.top = '-30px';
-  // БОЛЬШЕ И ЯРЧЕ НА МОБИЛЬНЫХ
-  star.style.width = window.innerWidth < 768 ? '2px' : '1px';
-  star.style.height = (window.innerWidth < 768 ? 50 : 40) + Math.random() * 20 + 'px';
-  star.style.background = `linear-gradient(to bottom, 
-    transparent 0%, 
-    rgba(255,255,255,${window.innerWidth < 768 ? 0.9 : 0.8} + Math.random() * 0.2}) 20%, 
-    rgba(255,255,255,${window.innerWidth < 768 ? 0.6 : 0.4} + Math.random() * 0.3}) 50%, 
-    rgba(255,255,255,${window.innerWidth < 768 ? 0.2 : 0.1} + Math.random() * 0.2}) 80%, 
-    transparent 100%)`;
-  star.style.borderRadius = '50%';
-  star.style.opacity = '0';
-  star.style.filter = 'blur(0.5px)';
-  starsContainer.appendChild(star);
-  
-  return star;
-}
-
-function getRandomLine(starLines) {
-  return starLines[Math.floor(Math.random() * starLines.length)];
-}
-  
-  function launchStar() {
-    const starLines = calculateStarLines();
+// ИСПРАВЛЕННАЯ СИСТЕМА ЗВЕЗД С GLOW ЭФФЕКТОМ
+function initializeStarSystem() {
+    const container = document.getElementById('stars-container');
+    if (!container) return;
     
-    if (starSettings.currentCount < starSettings.maxConcurrent) {
-      const linePosition = getRandomLine(starLines);
-      const star = createStar(linePosition);
-      starSettings.currentCount++;
-      
-      const duration = 1.2 + Math.random() * 0.6;
-      star.style.animation = `starFall ${duration}s ease-out forwards`;
-      
-      setTimeout(() => {
-        if (star.parentNode) {
-          star.parentNode.removeChild(star);
+    console.log('⭐ Запускаем звездную систему с GLOW...');
+    
+    // Очищаем контейнер
+    container.innerHTML = '';
+    
+    function createRandomStar() {
+        // Очищаем только если звезд слишком много
+        if (container.children.length > 3) {
+            container.innerHTML = '';
         }
-        starSettings.currentCount--;
-      }, duration * 1000);
+        
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // Рандомная линия из grid'а
+        const gridSize = window.innerWidth < 768 ? 15 : 60;
+        const containerWidth = window.innerWidth;
+        const totalLines = Math.floor(containerWidth / gridSize);
+        
+        // Гарантируем валидные линии
+        const startLine = Math.max(2, 4);
+        const endLine = Math.min(totalLines - 2, totalLines - 4);
+        const lineIndex = Math.floor(Math.random() * (endLine - startLine)) + startLine;
+        const linePosition = lineIndex * gridSize;
+        
+        star.style.left = linePosition + 'px';
+        star.style.top = '-30px';
+        star.style.width = window.innerWidth < 768 ? '2px' : '1px';
+        star.style.height = (window.innerWidth < 768 ? 50 : 40) + 'px';
+        
+        // ⚡ НАСТРОЙКИ ЦВЕТА И GLOW:
+        const starColor = '77, 180, 255'; // Голубой (твой accent2)
+        star.style.background = `linear-gradient(to bottom, 
+            transparent 0%, 
+            rgba(${starColor},0.4) 20%, 
+            rgba(${starColor},0.7) 50%, 
+            rgba(${starColor},0.9) 80%, 
+            transparent 100%)`;
+        
+        star.style.borderRadius = '50%';
+        star.style.opacity = '0';
+        
+        // ⚡ GLOW ЭФФЕКТ:
+        star.style.filter = 'blur(0.8px) brightness(3)';
+        star.style.boxShadow = `
+            0 0 10px rgba(${starColor}, 0.6),
+            0 0 20px rgba(${starColor}, 0.4),
+            0 0 30px rgba(${starColor}, 0.2)
+        `;
+        
+        star.style.position = 'absolute';
+        star.style.zIndex = '1';
+        
+        // Анимация
+        const duration = 1.5 + Math.random() * 1;
+        star.style.animation = `starFall ${duration}s ease-out forwards`;
+        
+        container.appendChild(star);
+        
+        // Удаляем звезду после анимации
+        setTimeout(() => {
+            if (star.parentNode) {
+                star.parentNode.removeChild(star);
+            }
+        }, duration * 1000);
     }
     
-    setTimeout(launchStar, starSettings.launchInterval);
-  }
+    // Запускаем звезды каждые 2-4 секунды
+    const starInterval = setInterval(() => {
+        createRandomStar();
+    }, 2000 + Math.random() * 2000);
+    
+    // Первая звезда
+    setTimeout(() => {
+        createRandomStar();
+    }, 500);
+    
+    // Останавливаем при уходе со страницы
+    window.addEventListener('beforeunload', () => {
+        clearInterval(starInterval);
+    });
+    
+    // Перезапуск при изменении размера окна
+    window.addEventListener('resize', () => {
+        setTimeout(initializeStarSystem, 500);
+    });
+}
 
-  function handleResize() {
-    // Автоматическая адаптация при изменении размера
-  }
-
-  window.addEventListener('resize', handleResize);
-  
-  window.addEventListener('load', () => {
-    setTimeout(launchStar, 1000);
-  });
+// Запуск при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initializeStarSystem, 1000);
+});
 </script>
+
 
 <style>
   @keyframes starFall {
-  0% {
-    transform: translateY(0) scale(0.8);
-    opacity: 0;
-    filter: blur(0.5px) brightness(1);
-  }
-  10% {
-    opacity: 0.9;
-    filter: blur(0.5px) brightness(1.8);
-  }
-  40% {
-    opacity: 1;
-    filter: blur(0.5px) brightness(2.5);
-  }
-  85% {
-    opacity: 1;
-    filter: blur(0.5px) brightness(2.5);
-  }
-  100% {
-    transform: translateY(calc(100vh + 180px)) scale(1.1);
-    opacity: 0; /* ⚠️ ИСПРАВЛЕНО: меняем на 0 */
-    filter: blur(0.5px) brightness(2.5);
-  }
+    0% {
+        transform: translateY(0) scale(0.8);
+        opacity: 0;
+        filter: blur(0.5px) brightness(1);
+    }
+    10% {
+        opacity: 0.9;
+        filter: blur(0.5px) brightness(1.8);
+    }
+    40% {
+        opacity: 1;
+        filter: blur(0.5px) brightness(2.5);
+    }
+    85% {
+        opacity: 1;
+        filter: blur(0.5px) brightness(2.5);
+    }
+    100% {
+        transform: translateY(calc(100vh + 100px)) scale(1.1);
+        opacity: 0;
+        filter: blur(0.5px) brightness(2.5);
+    }
 }
 
   .hero-grid-container,
