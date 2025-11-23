@@ -664,6 +664,38 @@
   .section-title p {
     font-size: 14px;
   }
+
+/* Фиксируем состояние когда все проекты показаны */
+.portfolio-grid.show-all {
+  position: relative;
+  z-index: 5;
+}
+
+/* Предотвращаем случайное закрытие при скролле */
+.show-more-btn {
+  position: relative;
+  z-index: 10;
+}
+
+/* Плавная анимация для проектов */
+.portfolio-grid .project {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* СТРОКА ПЕРЕД КОТОРОЙ ДОБАВЛЯЕШЬ - этот блок уже должен быть в твоем коде: */
+@media (max-width: 768px) {
+  /* Улучшаем проекты в портфолио */
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  /* Показываем только ПЕРВЫЙ проект на мобильных */
+  .portfolio-grid .project:not(:first-child) {
+    display: none !important;
+  }
+  // ... остальной код
+}
   
   @media (max-width: 768px) {
   /* Улучшаем проекты в портфолио */
@@ -2116,7 +2148,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadDynamicContent();
 });
 
-// Функция для мобильного портфолио
+// Функция для мобильного портфолио - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -2124,30 +2156,107 @@ function initPortfolioToggle() {
   if (!showMoreBtn || !portfolioGrid) return;
   
   let isExpanded = false;
+  let isAnimating = false;
   
   showMoreBtn.addEventListener('click', function() {
+    if (isAnimating) return;
+    
+    isAnimating = true;
     isExpanded = !isExpanded;
     
     if (isExpanded) {
       portfolioGrid.classList.add('show-all');
       showMoreBtn.textContent = 'Show less';
+      
+      // Показываем проекты с небольшой задержкой для анимации
+      setTimeout(() => {
+        const projects = portfolioGrid.querySelectorAll('.project');
+        projects.forEach((project, index) => {
+          if (index > 0) {
+            setTimeout(() => {
+              project.style.opacity = '0';
+              project.style.transform = 'translateY(20px)';
+              project.style.display = 'flex';
+              
+              setTimeout(() => {
+                project.style.transition = 'all 0.4s ease';
+                project.style.opacity = '1';
+                project.style.transform = 'translateY(0)';
+              }, 50);
+            }, index * 80);
+          }
+        });
+        isAnimating = false;
+      }, 50);
+      
     } else {
-      portfolioGrid.classList.remove('show-all');
-      showMoreBtn.textContent = 'See all projects';
+      // Скрываем проекты с анимацией
+      const projects = portfolioGrid.querySelectorAll('.project');
+      projects.forEach((project, index) => {
+        if (index > 0) {
+          project.style.transition = 'all 0.3s ease';
+          project.style.opacity = '0';
+          project.style.transform = 'translateY(20px)';
+        }
+      });
+      
+      setTimeout(() => {
+        portfolioGrid.classList.remove('show-all');
+        showMoreBtn.textContent = 'See all projects';
+        
+        // Полностью скрываем проекты после анимации
+        setTimeout(() => {
+          projects.forEach((project, index) => {
+            if (index > 0) {
+              project.style.display = 'none';
+            }
+          });
+          isAnimating = false;
+        }, 50);
+      }, 300);
     }
   });
   
+  // Инициализация - скрываем все кроме первого
   if (window.innerWidth <= 768) {
     portfolioGrid.classList.remove('show-all');
+    const projects = portfolioGrid.querySelectorAll('.project');
+    projects.forEach((project, index) => {
+      if (index > 0) {
+        project.style.display = 'none';
+      }
+    });
   }
 }
 
 window.addEventListener('resize', function() {
   const portfolioGrid = document.querySelector('.portfolio-grid');
+  const showMoreBtn = document.querySelector('.show-more-btn');
+  
+  if (!portfolioGrid || !showMoreBtn) return;
+  
   if (window.innerWidth <= 768) {
+    // На мобильных - сбрасываем состояние
     portfolioGrid.classList.remove('show-all');
+    showMoreBtn.textContent = 'See all projects';
+    
+    const projects = portfolioGrid.querySelectorAll('.project');
+    projects.forEach((project, index) => {
+      if (index > 0) {
+        project.style.display = 'none';
+      } else {
+        project.style.display = 'flex';
+      }
+    });
   } else {
+    // На десктопе - показываем все проекты
     portfolioGrid.classList.add('show-all');
+    const projects = portfolioGrid.querySelectorAll('.project');
+    projects.forEach(project => {
+      project.style.display = 'flex';
+      project.style.opacity = '1';
+      project.style.transform = 'none';
+    });
   }
 });
 
