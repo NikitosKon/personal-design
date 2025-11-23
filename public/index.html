@@ -2085,22 +2085,23 @@ async function loadDynamicContent() {
     const portfolioData = await portfolioRes.json();
     const contactData = await contactRes.json();
 
-    if (heroTitleData.content) {
+    // 🔥 ИСПРАВЛЯЕМ: используем .value вместо .content
+    if (heroTitleData.value) {
       const heroHeading = document.getElementById('hero-heading');
-      if (heroHeading) heroHeading.textContent = heroTitleData.content;
+      if (heroHeading) heroHeading.textContent = heroTitleData.value;
     }
-    if (heroSubtitleData.content) {
+    if (heroSubtitleData.value) {
       const heroSub = document.querySelector('.hero-sub');
-      if (heroSub) heroSub.textContent = heroSubtitleData.content;
+      if (heroSub) heroSub.textContent = heroSubtitleData.value;
     }
-    if (servicesData.content) {
-      try { updateServices(JSON.parse(servicesData.content)); } catch(e) { console.error(e); }
+    if (servicesData.value) {
+      try { updateServices(JSON.parse(servicesData.value)); } catch(e) { console.error(e); }
     }
-    if (portfolioData.content) {
-      try { updatePortfolio(JSON.parse(portfolioData.content)); } catch(e) { console.error(e); }
+    if (portfolioData.value) {
+      try { updatePortfolio(JSON.parse(portfolioData.value)); } catch(e) { console.error(e); }
     }
-    if (contactData.content) {
-      try { updateContactInfo(JSON.parse(contactData.content)); } catch(e) { console.error(e); }
+    if (contactData.value) {
+      try { updateContactInfo(JSON.parse(contactData.value)); } catch(e) { console.error(e); }
     }
   } catch (error) {
     console.error('Error loading dynamic content:', error);
