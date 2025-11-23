@@ -1159,48 +1159,39 @@
 </script>
 
 <script>
-// СИСТЕМА ОДНОЙ ЗВЕЗДЫ
+// ИСПРАВЛЕННАЯ СИСТЕМА ОДНОЙ ЗВЕЗДЫ ДЛЯ МОБИЛЬНЫХ
 function initializeSingleStar() {
     const container = document.getElementById('stars-container');
     if (!container) return;
     
-    console.log('⭐ Запускаем систему ОДНОЙ звезды...');
-    
-    // Очищаем контейнер
     container.innerHTML = '';
     
     function createSingleStar() {
-        // ⚡ ВСЕГДА ОЧИЩАЕМ ПРЕДЫДУЩУЮ ЗВЕЗДУ
         container.innerHTML = '';
         
         const star = document.createElement('div');
         star.className = 'star';
         
-        // Рандомная линия из grid'а
-        const isMobile = window.innerWidth < 768;
-        const gridSize = isMobile ? 30 : 60;
+        // ⚡ ИСПРАВЛЕНИЕ 1: ВСЕГДА 60px ДЛЯ ТОЧНЫХ ЛИНИЙ
+        const gridSize = 60;
         const containerWidth = window.innerWidth;
         const totalLines = Math.floor(containerWidth / gridSize);
         
-        // Гарантируем валидные линии
-        const startLine = isMobile ? 2 : 4;
-        const endLine = isMobile ? totalLines - 2 : totalLines - 4;
-        
-        let linePosition;
-        if (endLine <= startLine) {
-            linePosition = Math.floor(containerWidth / 2);
-        } else {
-            const lineIndex = Math.floor(Math.random() * (endLine - startLine)) + startLine;
-            linePosition = lineIndex * gridSize;
-        }
+        // Центральные линии (избегаем краев)
+        const startLine = 4;
+        const endLine = Math.max(startLine + 1, totalLines - 4);
+        const lineIndex = Math.floor(Math.random() * (endLine - startLine)) + startLine;
+        const linePosition = lineIndex * gridSize;
         
         star.style.left = linePosition + 'px';
         star.style.top = '-30px';
-        star.style.width = isMobile ? '2px' : '1px';
-        star.style.height = '40px';
         
-        // ЦВЕТ И GLOW
-        const starColor = '255, 255, 255'; // Белый
+        // ⚡ ИСПРАВЛЕНИЕ 2: ВСЕГДА ТОНКАЯ
+        star.style.width = '1px';
+        star.style.height = '30px';
+        
+        // Белый цвет
+        const starColor = '255, 255, 255';
         star.style.background = `linear-gradient(to bottom, 
             transparent 0%, 
             rgba(${starColor},0.4) 20%, 
@@ -1210,44 +1201,38 @@ function initializeSingleStar() {
         
         star.style.borderRadius = '50%';
         star.style.opacity = '0';
-        star.style.filter = isMobile ? 'blur(0.5px) brightness(2)' : 'blur(0.8px) brightness(3)';
-        star.style.boxShadow = `0 0 10px rgba(${starColor}, 0.6)`;
+        star.style.filter = 'blur(0.5px) brightness(2)';
+        star.style.boxShadow = `0 0 8px rgba(${starColor}, 0.5)`;
         star.style.position = 'absolute';
         star.style.zIndex = '1';
         
-        // Анимация
-        const duration = 1.5 + Math.random() * 1;
+        const duration = 1.2 + Math.random() * 0.3; // ⚡ БЫСТРЕЕ
         star.style.animation = `starFall ${duration}s ease-out forwards`;
         
         container.appendChild(star);
         
-        console.log(`⭐ Звезда создана на линии ${linePosition}px`);
-        
-        // ⚡ СОЗДАЕМ СЛЕДУЮЩУЮ ЗВЕЗДУ ПОСЛЕ ТОЧНОЙ ЗАДЕРЖКИ
+        // ⚡ ИСПРАВЛЕНИЕ 4: ЧАЩЕ ПОЯВЛЕНИЕ (1.5 сек)
         setTimeout(() => {
             createSingleStar();
-        }, 3000); // ⬅️ НОВАЯ ЗВЕЗДА ЧЕРЕЗ 3 СЕКУНДЫ
+        }, 1500);
     }
     
-    // Запускаем первую звезду
     setTimeout(() => {
         createSingleStar();
-    }, 1000);
-    
-    // Перезапуск при изменении размера окна
-    window.addEventListener('resize', () => {
-        setTimeout(initializeSingleStar, 500);
-    });
+    }, 500);
 }
 
-// Запуск при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeSingleStar, 1000);
+    setTimeout(initializeSingleStar, 500);
 });
 </script>
-
 <style>
-  @keyframes starFall {
+  .stars-container {
+    pointer-events: none !important;
+    touch-action: none !important;
+}
+
+@keyframes starFall {
     0% {
         transform: translateY(0) scale(0.8);
         opacity: 0;
@@ -1270,13 +1255,14 @@ document.addEventListener('DOMContentLoaded', function() {
         opacity: 0;
         filter: blur(0.5px) brightness(2.5);
     }
-}
+
 
   .hero-grid-container,
   .stars-container {
     width: 100vw !important;
     left: 0 !important;
   }
+}
 
 .hero-logo {
   display: flex;
