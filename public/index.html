@@ -2133,26 +2133,8 @@ async function loadDynamicContent() {
   }
 }
 
-// See all projects functionality
-document.addEventListener('DOMContentLoaded', function() {
-  const showMoreBtn = document.querySelector('a.btn[href="javascript:void(0)"]');
-  if (showMoreBtn) {
-    let expanded = false;
-    showMoreBtn.addEventListener("click", () => {
-      expanded = !expanded;
-      document.querySelectorAll('.additional-project').forEach(p => {
-        p.style.display = expanded ? "flex" : "none";
-      });
-      showMoreBtn.textContent = expanded ? "Show less" : "See all projects";
-    });
-    document.querySelectorAll('.additional-project').forEach(p => {
-      p.style.display = "none";
-    });
-  }
-  loadDynamicContent();
-});
 
-// Функция для мобильного портфолио - УПРОЩЕННАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -2179,6 +2161,7 @@ function initPortfolioToggle() {
   }
 }
 
+// Ресайз
 window.addEventListener('resize', function() {
   const portfolioGrid = document.querySelector('.portfolio-grid');
   const showMoreBtn = document.querySelector('.show-more-btn');
@@ -2186,13 +2169,14 @@ window.addEventListener('resize', function() {
   if (!portfolioGrid || !showMoreBtn) return;
   
   if (window.innerWidth <= 768) {
-    showMoreBtn.textContent = 'See all projects';
+    showMoreBtn.style.display = 'block';
   } else {
     portfolioGrid.classList.add('show-all');
     showMoreBtn.style.display = 'none';
   }
 });
 
+// Инициализация
 document.addEventListener('DOMContentLoaded', function() {
   initPortfolioToggle();
 });
