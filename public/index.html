@@ -1170,23 +1170,26 @@
   };
 
   function calculateStarLines() {
-  // РАЗНАЯ СЕТКА ДЛЯ МОБИЛЬНЫХ И ПК
-  const gridSize = window.innerWidth < 768 ? 15 : 60; // ОЧЕНЬ ЧАСТАЯ СЕТКА НА МОБИЛЬНЫХ
+  function calculateStarLines() {
+  const gridSize = window.innerWidth < 768 ? 15 : 60;
   const containerWidth = window.innerWidth;
   const totalLines = Math.floor(containerWidth / gridSize);
   
   const starLines = [];
   
-  // НА МОБИЛЬНЫХ ИСПОЛЬЗУЕМ БОЛЬШЕ ЛИНИЙ
-  if (window.innerWidth < 768) {
-    for (let i = 2; i < totalLines - 2; i++) {
+  // Гарантируем хотя бы 3 линии
+  const startLine = Math.max(2, 4);
+  const endLine = Math.min(totalLines - 2, totalLines - 4);
+  
+  for (let i = startLine; i < endLine; i++) {
+    if (i * gridSize < containerWidth - gridSize) {
       starLines.push(i * gridSize);
     }
-  } else {
-    // НА ПК ОСТАВЛЯЕМ КАК БЫЛО
-    for (let i = 4; i < totalLines - 4; i++) {
-      starLines.push(i * gridSize);
-    }
+  }
+  
+  // Если массив пустой, добавляем центральную линию
+  if (starLines.length === 0) {
+    starLines.push(Math.floor(containerWidth / 2));
   }
   
   return starLines;
@@ -1253,37 +1256,29 @@ function getRandomLine(starLines) {
 
 <style>
   @keyframes starFall {
-    0% {
-      transform: translateY(0) scale(0.8);
-      opacity: 0;
-      filter: blur(0.5px) brightness(1);
-    }
-    10% {
-      opacity: 0.9;
-      filter: blur(0.5px) brightness(1.8);
-    }
-    40% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    85% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    90% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    95% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    100% {
-      transform: translateY(calc(100vh + 200px)) scale(1.1);
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+    filter: blur(0.5px) brightness(1);
   }
+  10% {
+    opacity: 0.9;
+    filter: blur(0.5px) brightness(1.8);
+  }
+  40% {
+    opacity: 1;
+    filter: blur(0.5px) brightness(2.5);
+  }
+  85% {
+    opacity: 1;
+    filter: blur(0.5px) brightness(2.5);
+  }
+  100% {
+    transform: translateY(calc(100vh + 180px)) scale(1.1);
+    opacity: 0; /* ⚠️ ИСПРАВЛЕНО: меняем на 0 */
+    filter: blur(0.5px) brightness(2.5);
+  }
+}
 
   .hero-grid-container,
   .stars-container {
