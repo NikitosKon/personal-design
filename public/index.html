@@ -2113,7 +2113,7 @@ async function loadDynamicContent() {
 }
 
 
-// Функция для мобильного портфолио - ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -2123,8 +2123,11 @@ function initPortfolioToggle() {
   let isExpanded = false;
   
   showMoreBtn.addEventListener('click', function(e) {
-    e.preventDefault(); // ДОБАВЬ ЭТУ СТРОКУ - предотвращает скролл
-    e.stopPropagation(); // ДОБАВЬ ЭТУ СТРОКУ - предотвращает всплытие
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // ДОБАВЛЯЕМ: предотвращаем любые другие обработчики
+    e.stopImmediatePropagation();
     
     isExpanded = !isExpanded;
     
@@ -2134,6 +2137,18 @@ function initPortfolioToggle() {
     } else {
       portfolioGrid.classList.remove('show-all');
       showMoreBtn.textContent = 'See all projects';
+      
+      // ДОБАВЛЯЕМ: плавный скролл обратно к портфолио
+      setTimeout(() => {
+        const portfolioSection = document.getElementById('portfolio');
+        if (portfolioSection) {
+          const offset = portfolioSection.getBoundingClientRect().top + window.pageYOffset - 80;
+          window.scrollTo({
+            top: offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
     }
   });
   
