@@ -1159,7 +1159,7 @@
 </script>
 
 <script>
-// ИСПРАВЛЕННАЯ СИСТЕМА - СЛУЧАЙНЫЕ ЛИНИИ И 3 СЕКУНДЫ
+// УПРОЩЕННАЯ СИСТЕМА - СЛУЧАЙНЫЕ ПОЗИЦИИ
 function initializeSingleStar() {
     const container = document.getElementById('stars-container');
     if (!container) return;
@@ -1172,24 +1172,13 @@ function initializeSingleStar() {
         const star = document.createElement('div');
         star.className = 'star';
         
-        // ⚡ ИСПРАВЛЕНИЕ: ПРАВИЛЬНЫЙ РАСЧЕТ ЛИНИЙ
-        const gridSize = 60;
-        const containerWidth = window.innerWidth;
-        const totalLines = Math.floor(containerWidth / gridSize);
+        // ⚡ ПРОСТО СЛУЧАЙНАЯ ПОЗИЦИЯ ОТ 20% ДО 80% ШИРИНЫ
+        const minPosition = window.innerWidth * 0.2;  // 20% от ширины
+        const maxPosition = window.innerWidth * 0.8;  // 80% от ширины
+        const linePosition = Math.floor(Math.random() * (maxPosition - minPosition)) + minPosition;
         
-        console.log('📏 Всего линий:', totalLines, 'Ширина:', containerWidth);
-        
-        // ⚡ ИСПРАВЛЕНИЕ: ГАРАНТИРУЕМ МИНИМУМ 3 ЛИНИИ
-        const startLine = 3;
-        const endLine = Math.max(startLine + 1, totalLines - 3);
-        
-        console.log('🎯 Диапазон линий:', startLine, 'до', endLine);
-        
-        // Случайная линия из доступного диапазона
-        const lineIndex = Math.floor(Math.random() * (endLine - startLine)) + startLine;
-        const linePosition = lineIndex * gridSize;
-        
-        console.log('⭐ Выбрана линия:', lineIndex, 'Позиция:', linePosition + 'px');
+        console.log('📱 Ширина экрана:', window.innerWidth, 'px');
+        console.log('⭐ Случайная позиция:', linePosition, 'px');
         
         star.style.left = linePosition + 'px';
         star.style.top = '-30px';
@@ -1216,10 +1205,8 @@ function initializeSingleStar() {
         
         container.appendChild(star);
         
-        // ⚡ ИСПРАВЛЕНИЕ: СЛУЧАЙНЫЙ ИНТЕРВАЛ 2-4 СЕКУНДЫ
-        const nextDelay = 2000 + Math.random() * 2000; // 2-4 секунды
-        console.log('⏱️ Следующая звезда через:', Math.round(nextDelay/1000) + 'сек');
-        
+        // Интервал 2-4 секунды
+        const nextDelay = 2000 + Math.random() * 2000;
         setTimeout(() => {
             createSingleStar();
         }, nextDelay);
@@ -1234,6 +1221,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initializeSingleStar, 500);
 });
 </script>
+
 <style>
   .stars-container {
     pointer-events: none !important;
