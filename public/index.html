@@ -1170,41 +1170,53 @@
   };
 
   function calculateStarLines() {
-    const gridSize = 60;
-    const containerWidth = window.innerWidth;
-    const totalLines = Math.floor(containerWidth / gridSize);
-    
-    const starLines = [];
+  // РАЗНАЯ СЕТКА ДЛЯ МОБИЛЬНЫХ И ПК
+  const gridSize = window.innerWidth < 768 ? 15 : 60; // ОЧЕНЬ ЧАСТАЯ СЕТКА НА МОБИЛЬНЫХ
+  const containerWidth = window.innerWidth;
+  const totalLines = Math.floor(containerWidth / gridSize);
+  
+  const starLines = [];
+  
+  // НА МОБИЛЬНЫХ ИСПОЛЬЗУЕМ БОЛЬШЕ ЛИНИЙ
+  if (window.innerWidth < 768) {
+    for (let i = 2; i < totalLines - 2; i++) {
+      starLines.push(i * gridSize);
+    }
+  } else {
+    // НА ПК ОСТАВЛЯЕМ КАК БЫЛО
     for (let i = 4; i < totalLines - 4; i++) {
       starLines.push(i * gridSize);
     }
-    return starLines;
   }
+  
+  return starLines;
+}
 
-  function createStar(linePosition) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.style.left = linePosition + 'px';
-    star.style.top = '-30px';
-    star.style.width = '1px';
-    star.style.height = (40 + Math.random() * 20) + 'px';
-    star.style.background = `linear-gradient(to bottom, 
-      transparent 0%, 
-      rgba(255,255,255,${0.8 + Math.random() * 0.2}) 20%, 
-      rgba(255,255,255,${0.4 + Math.random() * 0.3}) 50%, 
-      rgba(255,255,255,${0.1 + Math.random() * 0.2}) 80%, 
-      transparent 100%)`;
-    star.style.borderRadius = '50%';
-    star.style.opacity = '0';
-    star.style.filter = 'blur(0.5px)';
-    starsContainer.appendChild(star);
-    
-    return star;
-  }
+function createStar(linePosition) {
+  const star = document.createElement('div');
+  star.className = 'star';
+  star.style.left = linePosition + 'px';
+  star.style.top = '-30px';
+  // БОЛЬШЕ И ЯРЧЕ НА МОБИЛЬНЫХ
+  star.style.width = window.innerWidth < 768 ? '2px' : '1px';
+  star.style.height = (window.innerWidth < 768 ? 50 : 40) + Math.random() * 20 + 'px';
+  star.style.background = `linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(255,255,255,${window.innerWidth < 768 ? 0.9 : 0.8} + Math.random() * 0.2}) 20%, 
+    rgba(255,255,255,${window.innerWidth < 768 ? 0.6 : 0.4} + Math.random() * 0.3}) 50%, 
+    rgba(255,255,255,${window.innerWidth < 768 ? 0.2 : 0.1} + Math.random() * 0.2}) 80%, 
+    transparent 100%)`;
+  star.style.borderRadius = '50%';
+  star.style.opacity = '0';
+  star.style.filter = 'blur(0.5px)';
+  starsContainer.appendChild(star);
+  
+  return star;
+}
 
-  function getRandomLine(starLines) {
-    return starLines[Math.floor(Math.random() * starLines.length)];
-  }
+function getRandomLine(starLines) {
+  return starLines[Math.floor(Math.random() * starLines.length)];
+}
   
   function launchStar() {
     const starLines = calculateStarLines();

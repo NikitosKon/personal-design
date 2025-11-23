@@ -197,6 +197,92 @@ app.get('/api/content/contact', authenticateToken, async (req, res) => {
   }
 });
 
+// PUT роуты для каждого раздела админки
+app.put('/api/content/hero_title', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const db = await getPool();
+    
+    await db.query(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      ['hero_title', content, content]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save hero title' });
+  }
+});
+
+app.put('/api/content/hero_subtitle', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const db = await getPool();
+    
+    await db.query(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      ['hero_subtitle', content, content]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save hero subtitle' });
+  }
+});
+
+app.put('/api/content/services', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const db = await getPool();
+    
+    await db.query(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      ['services', content, content]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save services' });
+  }
+});
+
+app.put('/api/content/portfolio', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const db = await getPool();
+    
+    await db.query(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      ['portfolio', content, content]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save portfolio' });
+  }
+});
+
+app.put('/api/content/contact_info', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const db = await getPool();
+    
+    await db.query(
+      'INSERT INTO content (title, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?',
+      ['contact_info', content, content]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save contact info' });
+  }
+});
+
 // Start server
 initDatabase().then(() => {
   app.listen(PORT, () => {
