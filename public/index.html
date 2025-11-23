@@ -646,6 +646,43 @@
     margin-top: 20px;
   }
   
+.portfolio-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  /* Показываем только ПЕРВЫЙ проект на мобильных по умолчанию */
+  .portfolio-grid:not(.show-all) .project:not(:first-child) {
+    display: none !important;
+  }
+  
+  /* УБИРАЕМ особую высоту для первого проекта */
+  .portfolio-grid .project:first-child {
+    display: flex !important;
+    min-height: 220px; /* ТАКАЯ ЖЕ ВЫСОТА КАК У ВСЕХ */
+    margin-bottom: 0;
+  }
+  
+  /* Когда показываем все проекты */
+  .portfolio-grid.show-all .project {
+    display: flex !important;
+    min-height: 220px;
+    margin-bottom: 16px;
+  }
+  
+  .project-content {
+    padding: 10px;
+  }
+  
+  .project .meta {
+    font-size: 15px;
+  }
+  
+  .project p {
+    font-size: 13px;
+  }
+}
+
   .hero-social-icon {
     width: 40px;
     height: 40px;
@@ -685,45 +722,7 @@
   opacity: 1 !important;
   visibility: visible !important;
 }
-
-@media (max-width: 768px) {
-  /* Улучшаем проекты в портфолио */
-  .portfolio-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  /* Показываем только ПЕРВЫЙ проект на мобильных по умолчанию */
-  .portfolio-grid:not(.show-all) .project:not(:first-child) {
-    display: none !important;
-  }
-  
-  .portfolio-grid .project:first-child {
-    display: flex !important;
-    min-height: 300px;
-    margin-bottom: 0;
-  }
-  
-  /* Когда показываем все проекты */
-  .portfolio-grid.show-all .project {
-    display: flex !important;
-    min-height: 220px;
-    margin-bottom: 16px;
-  }
-  
-  .project-content {
-    padding: 10px;
-  }
-  
-  .project .meta {
-    font-size: 15px;
-  }
-  
-  .project p {
-    font-size: 13px;
-  }
-}
-  
+ 
   /* Улучшаем контактную форму */
   .contact-grid {
     gap: 16px;
@@ -993,9 +992,9 @@
     </article>
   </div>
 
-  <div style="text-align:center;margin-top:18px">
-    <button class="btn show-more-btn" id="portfolio-toggle-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted)">See all projects</button>
-  </div>
+  <div style="text-align:center;margin-top:18px;width:100%">
+  <button class="btn show-more-btn" id="portfolio-toggle-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin:0 auto">See all projects</button>
+</div>
 </section>
 
         <section id="services" class="container reveal" aria-labelledby="services-title">
@@ -1860,6 +1859,8 @@ const project = formData.get('project')?.trim();
 .show-more-btn {
   position: relative;
   z-index: 10;
+  display: block !important;
+  margin: 0 auto !important;
 }
 
 .portfolio-grid .project {
@@ -2004,28 +2005,6 @@ const project = formData.get('project')?.trim();
   }
   
 </script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.querySelector('a.btn[href="javascript:void(0)"]');
-  const hiddenProjects = document.querySelectorAll(".additional-project");
-
-  if (!btn) return;
-
-  let expanded = false;
-
-  btn.addEventListener("click", () => {
-    expanded = !expanded;
-
-    hiddenProjects.forEach(p => {
-      p.style.display = expanded ? "flex" : "none";
-    });
-
-    btn.textContent = expanded ? "Show less" : "See all projects";
-  });
-});
-</script>
-
 <script>
 // Dynamic content functionality - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function updateServices(services) {
@@ -2138,15 +2117,15 @@ async function loadDynamicContent() {
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
-
-  console.log('DEBUG: showMoreBtn found:', !!showMoreBtn);
-  console.log('DEBUG: portfolioGrid found:', !!portfolioGrid);
   
   if (!showMoreBtn || !portfolioGrid) return;
   
   let isExpanded = false;
   
-  showMoreBtn.addEventListener('click', function() {
+  showMoreBtn.addEventListener('click', function(e) {
+    e.preventDefault(); // ДОБАВЬ ЭТУ СТРОКУ - предотвращает скролл
+    e.stopPropagation(); // ДОБАВЬ ЭТУ СТРОКУ - предотвращает всплытие
+    
     isExpanded = !isExpanded;
     
     if (isExpanded) {
