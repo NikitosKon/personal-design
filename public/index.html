@@ -2138,6 +2138,9 @@ async function loadDynamicContent() {
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
+
+  console.log('DEBUG: showMoreBtn found:', !!showMoreBtn);
+  console.log('DEBUG: portfolioGrid found:', !!portfolioGrid);
   
   if (!showMoreBtn || !portfolioGrid) return;
   
@@ -2179,55 +2182,7 @@ window.addEventListener('resize', function() {
 // Инициализация
 document.addEventListener('DOMContentLoaded', function() {
   initPortfolioToggle();
-});
-  
-  // Инициализация - скрываем все кроме первого
-  if (window.innerWidth <= 768) {
-    portfolioGrid.classList.remove('show-all');
-    const projects = portfolioGrid.querySelectorAll('.project');
-    projects.forEach((project, index) => {
-      if (index > 0) {
-        project.style.display = 'none';
-      }
-    });
-  }
-}
-
-window.addEventListener('resize', function() {
-  const portfolioGrid = document.querySelector('.portfolio-grid');
-  const showMoreBtn = document.querySelector('.show-more-btn');
-  
-  if (!portfolioGrid || !showMoreBtn) return;
-  
-  if (window.innerWidth <= 768) {
-    // На мобильных - сбрасываем состояние
-    portfolioGrid.classList.remove('show-all');
-    showMoreBtn.textContent = 'See all projects';
-    
-    const projects = portfolioGrid.querySelectorAll('.project');
-    projects.forEach((project, index) => {
-      if (index > 0) {
-        project.style.display = 'none';
-      } else {
-        project.style.display = 'flex';
-      }
-    });
-  } else {
-    // На десктопе - показываем все проекты
-    portfolioGrid.classList.add('show-all');
-    const projects = portfolioGrid.querySelectorAll('.project');
-    projects.forEach(project => {
-      project.style.display = 'flex';
-      project.style.opacity = '1';
-      project.style.transform = 'none';
-    });
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  initPortfolioToggle();
-});
-
+}); 
 </script>
 
 </body>
