@@ -8,6 +8,7 @@ import messagesRoutes from './routes/messages.js';
 import adminRoutes from './routes/admin.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -23,6 +24,55 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/admin', express.static('admin'));
 app.use('/uploads', express.static('uploads'));
+app.use(fileUpload({
+    createParentPath: true
+}));
+
+app.post('/api/upload/video', authenticateToken, async (req, res) => {
+    try {
+        if (!req.files || !req.files.video) {
+            return res.status(400).json({ success: false, error: 'No video file uploaded' });
+        }
+
+        const videoFile = req.files.video;
+        
+        // Проверка типа файла
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+        if (!allowedTypes.includes(videoFile.mimetype)) {
+            return res.status(400).json({ success: false, error: 'Invalid file type' });
+        }
+
+        // Проверка размера (100MB максимум)
+        if (videoFile.size > 100 * 1024 * 1024) {
+            return res.status(400).json({ success: false, error: 'File too large' });
+        }
+
+        // Генерируем уникальное имя файла
+        const fileExtension = path.extname(videoFile.name);
+        const fileName = `video_${Date.now()}${fileExtension}`;
+        const filePath = path.join(__dirname, 'uploads/videos', fileName);
+
+        // Создаем папку если нет
+        const videosDir = path.join(__dirname, 'uploads/videos');
+        if (!fs.existsSync(videosDir)) {
+            fs.mkdirSync(videosDir, { recursive: true });
+
+
+        }
+
+        // Сохраняем файл
+        await videoFile.mv(filePath);
+
+        res.json({
+            success: true,
+            url: `/uploads/videos/${fileName}`,
+            message: 'Video uploaded successfully'
+        });
+    } catch (error) {
+        console.error('Video upload error:', error);
+        res.status(500).json({ success: false, error: 'Upload failed' });
+    }
+});
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
@@ -42,6 +92,57 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// Multer для загрузки изображений
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `image_${Date.now()}${fileExtension}`;
+    cb(null, fileName);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'), false);
+    }
+  }
+});
+
+// Endpoint для загрузки изображений
+app.post('/api/upload', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file uploaded' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    
+    res.json({
+      success: true,
+      url: fileUrl,
+      message: 'File uploaded successfully'
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ success: false, error: 'Upload failed' });
+  }
+});
 
 // Routes
 app.use('/api/upload', uploadRoutes);
