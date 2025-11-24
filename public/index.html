@@ -1867,6 +1867,42 @@ const project = formData.get('project')?.trim();
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
+/* ==========================
+   ЖЕСТКИЙ КОНТРОЛЬ ДЛЯ ПОРТФОЛИО
+   ПРЕДОТВРАЩЕНИЕ НЕЖЕЛАТЕЛЬНОГО СКРОЛЛА
+   ========================== */
+.portfolio-grid {
+  overflow-anchor: none; /* Предотвращает автоматический скролл браузера */
+}
+
+.portfolio-grid .project {
+  scroll-margin-top: 0;
+}
+
+/* Гарантируем, что кнопка всегда видна */
+.show-more-btn {
+  position: relative !important;
+  z-index: 1000 !important;
+  transform: none !important;
+}
+
+/* Убираем любые переходы, которые могут вызывать скролл */
+.portfolio-grid,
+.portfolio-grid .project,
+#portfolio {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Жесткое управление отображением проектов */
+.portfolio-grid:not(.show-all) .additional-project {
+  display: none !important;
+}
+
+.portfolio-grid.show-all .additional-project {
+  display: flex !important;
+}
+
 </style>
 
 <script>
@@ -2120,50 +2156,6 @@ function initPortfolioToggle() {
     portfolioGrid.classList.add('show-all');
     showMoreBtn.style.display = 'none';
   }
-}
-
-/* ==========================
-   ЖЕСТКИЙ КОНТРОЛЬ ДЛЯ ПОРТФОЛИО
-   ПРЕДОТВРАЩЕНИЕ НЕЖЕЛАТЕЛЬНОГО СКРОЛЛА
-   ========================== */
-.portfolio-grid {
-  overflow-anchor: none; /* Предотвращает автоматический скролл браузера */
-}
-
-.portfolio-grid .project {
-  scroll-margin-top: 0;
-}
-
-/* Гарантируем, что кнопка всегда видна */
-.show-more-btn {
-  position: relative !important;
-  z-index: 1000 !important;
-  transform: none !important;
-}
-
-/* Убираем любые переходы, которые могут вызывать скролл */
-.portfolio-grid,
-.portfolio-grid .project,
-#portfolio {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* Жесткое управление отображением проектов */
-.portfolio-grid:not(.show-all) .additional-project {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.portfolio-grid.show-all .additional-project {
-  display: flex !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  height: auto !important;
 }
 
 </script>
