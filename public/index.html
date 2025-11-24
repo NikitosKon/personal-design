@@ -2074,12 +2074,13 @@ function updateContactInfo(contact) {
 }
 
 
-// Функция для мобильного портфолио - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - ПЕРЕПИСАННАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
+  const portfolioSection = document.getElementById('portfolio');
   
-  if (!showMoreBtn || !portfolioGrid) return;
+  if (!showMoreBtn || !portfolioGrid || !portfolioSection) return;
   
   let isExpanded = false;
   
@@ -2087,53 +2088,84 @@ function initPortfolioToggle() {
     e.preventDefault();
     e.stopPropagation();
     
-    // Сохраняем текущую позицию скролла ДО изменения контента
-    const currentScrollPos = window.pageYOffset;
+    // Полностью отключаем любую анимацию скролла
+    const scrollBehavior = 'auto';
     
     isExpanded = !isExpanded;
     
     if (isExpanded) {
+      // Показываем все проекты
       portfolioGrid.classList.add('show-all');
       showMoreBtn.textContent = 'Show less';
     } else {
+      // Скрываем дополнительные проекты
       portfolioGrid.classList.remove('show-all');
       showMoreBtn.textContent = 'See all projects';
     }
     
-    // Восстанавливаем позицию скролла после изменений DOM
+    // Жесткая блокировка любого скролла
     setTimeout(() => {
       window.scrollTo({
-        top: currentScrollPos,
-        behavior: 'auto' // Мгновенно, без анимации
+        top: portfolioSection.offsetTop - 100,
+        behavior: 'auto'
       });
-    }, 10);
+    }, 50);
   });
   
   // Инициализация
   if (window.innerWidth <= 768) {
     portfolioGrid.classList.remove('show-all');
-  }
-}
-
-// Ресайз
-window.addEventListener('resize', function() {
-  const portfolioGrid = document.querySelector('.portfolio-grid');
-  const showMoreBtn = document.querySelector('.show-more-btn');
-  
-  if (!portfolioGrid || !showMoreBtn) return;
-  
-  if (window.innerWidth <= 768) {
     showMoreBtn.style.display = 'block';
   } else {
     portfolioGrid.classList.add('show-all');
     showMoreBtn.style.display = 'none';
   }
-});
+}
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', function() {
-  initPortfolioToggle();
-}); 
+/* ==========================
+   ЖЕСТКИЙ КОНТРОЛЬ ДЛЯ ПОРТФОЛИО
+   ПРЕДОТВРАЩЕНИЕ НЕЖЕЛАТЕЛЬНОГО СКРОЛЛА
+   ========================== */
+.portfolio-grid {
+  overflow-anchor: none; /* Предотвращает автоматический скролл браузера */
+}
+
+.portfolio-grid .project {
+  scroll-margin-top: 0;
+}
+
+/* Гарантируем, что кнопка всегда видна */
+.show-more-btn {
+  position: relative !important;
+  z-index: 1000 !important;
+  transform: none !important;
+}
+
+/* Убираем любые переходы, которые могут вызывать скролл */
+.portfolio-grid,
+.portfolio-grid .project,
+#portfolio {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Жесткое управление отображением проектов */
+.portfolio-grid:not(.show-all) .additional-project {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.portfolio-grid.show-all .additional-project {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  height: auto !important;
+}
+
 </script>
 
 </body>
