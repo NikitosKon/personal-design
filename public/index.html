@@ -2074,7 +2074,7 @@ function updateContactInfo(contact) {
 }
 
 
-// Функция для мобильного портфолио - БАЗОВАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -2085,6 +2085,10 @@ function initPortfolioToggle() {
   
   showMoreBtn.addEventListener('click', function(e) {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Сохраняем текущую позицию скролла ДО изменения контента
+    const currentScrollPos = window.pageYOffset;
     
     isExpanded = !isExpanded;
     
@@ -2095,6 +2099,14 @@ function initPortfolioToggle() {
       portfolioGrid.classList.remove('show-all');
       showMoreBtn.textContent = 'See all projects';
     }
+    
+    // Восстанавливаем позицию скролла после изменений DOM
+    setTimeout(() => {
+      window.scrollTo({
+        top: currentScrollPos,
+        behavior: 'auto' // Мгновенно, без анимации
+      });
+    }, 10);
   });
   
   // Инициализация
