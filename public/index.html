@@ -2073,47 +2073,8 @@ function updateContactInfo(contact) {
   }
 }
 
-async function loadDynamicContent() {
-  try {
-    const [heroTitleRes, heroSubtitleRes, servicesRes, portfolioRes, contactRes] = await Promise.all([
-      fetch('/api/public/content/hero_title'),
-      fetch('/api/public/content/hero_subtitle'),
-      fetch('/api/public/content/services'),
-      fetch('/api/public/content/portfolio'),
-      fetch('/api/public/content/contact_info')
-    ]);
 
-    const heroTitleData = await heroTitleRes.json();
-    const heroSubtitleData = await heroSubtitleRes.json();
-    const servicesData = await servicesRes.json();
-    const portfolioData = await portfolioRes.json();
-    const contactData = await contactRes.json();
-
-    // 🔥 ИСПРАВЛЯЕМ: используем .value вместо .content
-    if (heroTitleData.value) {
-      const heroHeading = document.getElementById('hero-heading');
-      if (heroHeading) heroHeading.textContent = heroTitleData.value;
-    }
-    if (heroSubtitleData.value) {
-      const heroSub = document.querySelector('.hero-sub');
-      if (heroSub) heroSub.textContent = heroSubtitleData.value;
-    }
-    if (servicesData.value) {
-      try { updateServices(JSON.parse(servicesData.value)); } catch(e) { console.error(e); }
-    }
-    if (portfolioData.value) {
-      try { updatePortfolio(JSON.parse(portfolioData.value)); } catch(e) { console.error(e); }
-    }
-    if (contactData.value) {
-      try { updateContactInfo(JSON.parse(contactData.value)); } catch(e) { console.error(e); }
-    }
-  } catch (error) {
-    console.error('Error loading dynamic content:', error);
-  }
-}
-
-
-// Функция для мобильного портфолио - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - БАЗОВАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -2124,10 +2085,6 @@ function initPortfolioToggle() {
   
   showMoreBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    e.stopPropagation();
-    
-    // ДОБАВЛЯЕМ: предотвращаем любые другие обработчики
-    e.stopImmediatePropagation();
     
     isExpanded = !isExpanded;
     
@@ -2137,18 +2094,6 @@ function initPortfolioToggle() {
     } else {
       portfolioGrid.classList.remove('show-all');
       showMoreBtn.textContent = 'See all projects';
-      
-      // ДОБАВЛЯЕМ: плавный скролл обратно к портфолио
-      setTimeout(() => {
-        const portfolioSection = document.getElementById('portfolio');
-        if (portfolioSection) {
-          const offset = portfolioSection.getBoundingClientRect().top + window.pageYOffset - 80;
-          window.scrollTo({
-            top: offset,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
     }
   });
   
