@@ -1,99 +1,94 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
 let pool;
 
-export async function getPool() {
-  if (pool) return pool;
+export async function initDatabase() {
+  try {
+    pool = mysql.createPool({
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'root', 
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'personal_design',
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+      reconnect: true
+    });
 
-  const config = {
-    host: process.env.MYSQLHOST || 'localhost',
-    user: process.env.MYSQLUSER || 'root',
-    password: process.env.MYSQLPASSWORD || '',
-    database: process.env.MYSQLDATABASE || 'personal_design',
-    port: process.env.MYSQLPORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    decimalNumbers: true
-  };
+    // Test connection
+    const connection = await pool.getConnection();
+    console.log('✅ MySQL connected successfully');
+    connection.release();
 
-  if (process.env.DATABASE_URL) {
-    try {
-      const url = new URL(process.env.DATABASE_URL);
-      config.host = url.hostname;
-      config.port = url.port;
-      config.user = url.username;
-      config.password = url.password;
-      config.database = url.pathname.replace(/^\//, '');
-    } catch (e) {
-      console.log('Using individual MySQL config');
-    }
+    // Initialize tables if they don't exist
+    await initTables();
+    
+  } catch (error) {
+    console.error('❌ MySQL connection failed:', error.message);
+    // Don't exit process, just log error
   }
-
-  pool = mysql.createPool(config);
-  return pool;
 }
 
-export async function initDatabase() {
-  const db = await getPool();
+async function initTables() {
+  try {
+    // Create content table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS content (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL UNIQUE,
+        content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
 
-  // Создаём таблицы
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS admins (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(100) NOT NULL UNIQUE,
-      password_hash VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    // Create messages table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255),
+        email VARCHAR(255),
+        project_type VARCHAR(255),
+        message TEXT,
+        status ENUM('new', 'read', 'replied') DEFAULT 'new',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS messages (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(200),
-      email VARCHAR(200),
-      project_type VARCHAR(200),
-      message TEXT,
-      status ENUM('new','read','replied') DEFAULT 'new',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    // Create admins table
+    await pool.execute(`
+      CREATE TABLE IF NOT EXISTS admins (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS content (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title VARCHAR(200) NOT NULL UNIQUE,
-      content TEXT,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    // Create default admin if doesn't exist
+    const [adminRows] = await pool.execute('SELECT * FROM admins WHERE username = ?', ['admin']);
+    if (adminRows.length === 0) {
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await pool.execute(
+        'INSERT INTO admins (username, password_hash) VALUES (?, ?)',
+        ['admin', hashedPassword]
+      );
+      console.log('✅ Default admin created: admin / admin123');
+    }
 
-  // Добавляем тестового админа если нет
-  const [rows] = await db.execute(`SELECT COUNT(*) AS cnt FROM admins`);
-  if (rows[0].cnt === 0) {
-    const hash = await bcrypt.hash('thklty13$', 10);
-    await db.execute(`INSERT INTO admins (username, password_hash) VALUES (?, ?)`, ['tykhon', hash]);
-    console.log('✅ Test admin created: tykhon / thklty13$');
+    console.log('✅ Database tables initialized');
+  } catch (error) {
+    console.error('❌ Table initialization failed:', error.message);
   }
+}
 
-  // Добавляем дефолтный контент
-  const defaultContent = [
-    ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
-    ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
-    ['services', '[]'],
-    ['portfolio', '[]'],
-    ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
-  ];
-
-  for (const [key, value] of defaultContent) {
-    await db.execute(
-      'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
-      [key, value]
-    );
+export async function getPool() {
+  if (!pool) {
+    await initDatabase();
   }
-
-  console.log('✅ Database initialized');
+  return pool;
 }

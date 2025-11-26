@@ -201,39 +201,30 @@
     filter: blur(0.5px);
   }
 
-  @keyframes starFall {
-    0% {
-      transform: translateY(0) scale(0.8);
-      opacity: 0;
-      filter: blur(0.5px) brightness(1);
-    }
-    10% {
-      opacity: 0.9;
-      filter: blur(0.5px) brightness(1.8);
-    }
-    40% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    85% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    90% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    95% {
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
-    100% {
-      transform: translateY(calc(100% + 180px)) scale(1.1);
-      opacity: 1;
-      filter: blur(0.5px) brightness(2.5);
-    }
+@keyframes starFall {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+    filter: blur(0.5px) brightness(1);
   }
-
+  10% {
+    opacity: 0.9;
+    filter: blur(0.5px) brightness(1.8);
+  }
+  40% {
+    opacity: 1;
+    filter: blur(0.5px) brightness(2.5);
+  }
+  85% {
+    opacity: 1;
+    filter: blur(0.5px) brightness(2.5);
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) scale(1.1);
+    opacity: 0;
+    filter: blur(0.5px) brightness(2.5);
+  }
+}
   /* ==========================
      NAVBAR
      ========================== */
@@ -942,7 +933,7 @@
     <p>Hand-picked projects — identity, visuals and motion that drove results.</p>
   </div>
 
-  <div class="portfolio-grid">
+  <div class="portfolio-grid" id="portfolio-grid">
     <article class="project reveal" aria-label="Logo for CoffeeHub">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/00d7a8/ffffff?text=CoffeeHub+Logo');"></div>
       <div class="project-content">
@@ -967,7 +958,7 @@
       </div>
     </article>
 
-    <article class="project reveal additional-project" aria-label="Brand Identity for TechStart" style="display: none;">
+    <article class="project reveal additional-project" aria-label="Brand Identity for TechStart">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/1877f2/ffffff?text=TechStart+Brand');"></div>
       <div class="project-content">
         <div class="meta">Brand Identity for TechStart</div>
@@ -975,7 +966,7 @@
       </div>
     </article>
 
-    <article class="project reveal additional-project" aria-label="Product Packaging" style="display: none;">
+    <article class="project reveal additional-project" aria-label="Product Packaging">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/00b894/ffffff?text=Product+Packaging');"></div>
       <div class="project-content">
         <div class="meta">Product Packaging</div>
@@ -983,7 +974,7 @@
       </div>
     </article>
 
-    <article class="project reveal additional-project" aria-label="Social Media Kit" style="display: none;">
+    <article class="project reveal additional-project" aria-label="Social Media Kit">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/8e44ad/ffffff?text=Social+Media+Kit');"></div>
       <div class="project-content">
         <div class="meta">Social Media Kit</div>
@@ -993,8 +984,8 @@
   </div>
 
   <div style="text-align:center;margin-top:18px;width:100%">
-  <button class="btn show-more-btn" id="portfolio-toggle-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin:0 auto">See all projects</button>
-</div>
+    <button class="btn show-more-btn" id="portfolio-toggle-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin:0 auto">See all projects</button>
+  </div>
 </section>
 
         <section id="services" class="container reveal" aria-labelledby="services-title">
@@ -1199,66 +1190,76 @@
 </script>
 
 <script>
-// УПРОЩЕННАЯ СИСТЕМА - СЛУЧАЙНЫЕ ПОЗИЦИИ
-function initializeSingleStar() {
-    const container = document.getElementById('stars-container');
-    if (!container) return;
-    
+// Fixed stars following grid lines
+function initializeGridStars() {
+  const container = document.getElementById('stars-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  function createGridStars() {
     container.innerHTML = '';
     
-    function createSingleStar() {
-        container.innerHTML = '';
-        
-        const star = document.createElement('div');
-        star.className = 'star';
-        
-        // ⚡ ПРОСТО СЛУЧАЙНАЯ ПОЗИЦИЯ ОТ 20% ДО 80% ШИРИНЫ
-        const minPosition = window.innerWidth * 0.2;  // 20% от ширины
-        const maxPosition = window.innerWidth * 0.8;  // 80% от ширины
-        const linePosition = Math.floor(Math.random() * (maxPosition - minPosition)) + minPosition;
-        
-        console.log('📱 Ширина экрана:', window.innerWidth, 'px');
-        console.log('⭐ Случайная позиция:', linePosition, 'px');
-        
-        star.style.left = linePosition + 'px';
-        star.style.top = '-30px';
-        star.style.width = '1px';
-        star.style.height = '30px';
-        
-        const starColor = '255, 255, 255';
-        star.style.background = `linear-gradient(to bottom, 
-            transparent 0%, 
-            rgba(${starColor},0.4) 20%, 
-            rgba(${starColor},0.7) 50%, 
-            rgba(${starColor},0.9) 80%, 
-            transparent 100%)`;
-        
-        star.style.borderRadius = '50%';
-        star.style.opacity = '0';
-        star.style.filter = 'blur(0.5px) brightness(2)';
-        star.style.boxShadow = `0 0 8px rgba(${starColor}, 0.5)`;
-        star.style.position = 'absolute';
-        star.style.zIndex = '1';
-        
-        const duration = 1.5 + Math.random() * 0.5;
-        star.style.animation = `starFall ${duration}s ease-out forwards`;
-        
-        container.appendChild(star);
-        
-        // Интервал 2-4 секунды
-        const nextDelay = 2000 + Math.random() * 2000;
-        setTimeout(() => {
-            createSingleStar();
-        }, nextDelay);
+    const gridSize = 60; // Same as CSS grid size
+    const containerWidth = window.innerWidth;
+    const totalLines = Math.floor(containerWidth / gridSize);
+    
+    // Create array of available grid lines (skip first and last few for better appearance)
+    const gridLines = [];
+    for (let i = 4; i < totalLines - 4; i++) {
+      gridLines.push(i * gridSize);
     }
     
-    setTimeout(() => {
-        createSingleStar();
-    }, 1000);
+    // Launch 1-2 stars at random grid lines
+    const starsToLaunch = 1 + Math.floor(Math.random() * 2);
+    
+    for (let i = 0; i < starsToLaunch; i++) {
+      const randomLine = gridLines[Math.floor(Math.random() * gridLines.length)];
+      createStar(randomLine);
+    }
+    
+    // Next launch in 2-4 seconds
+    const nextDelay = 2000 + Math.random() * 2000;
+    setTimeout(createGridStars, nextDelay);
+  }
+  
+  function createStar(linePosition) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    
+    star.style.left = linePosition + 'px';
+    star.style.top = '-30px';
+    star.style.width = '1px';
+    star.style.height = (40 + Math.random() * 20) + 'px';
+    
+    const starColor = '255, 255, 255';
+    star.style.background = `linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(${starColor},0.8) 20%, 
+      rgba(${starColor},0.4) 50%, 
+      rgba(${starColor},0.1) 80%, 
+      transparent 100%)`;
+    
+    star.style.borderRadius = '50%';
+    star.style.opacity = '0';
+    star.style.filter = 'blur(0.5px) brightness(2)';
+    star.style.boxShadow = `0 0 8px rgba(${starColor}, 0.5)`;
+    star.style.position = 'absolute';
+    star.style.zIndex = '1';
+    
+    const duration = 1.5 + Math.random() * 0.5;
+    star.style.animation = `starFall ${duration}s ease-out forwards`;
+    
+    container.appendChild(star);
+  }
+  
+  // Start after initial delay
+  setTimeout(createGridStars, 1000);
 }
 
+// Update the DOMContentLoaded event
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeSingleStar, 500);
+  setTimeout(initializeGridStars, 500);
 });
 </script>
 
@@ -1851,58 +1852,34 @@ const project = formData.get('project')?.trim();
     }
   }
 
-.portfolio-grid.show-all {
-  position: relative;
-  z-index: 5;
-}
 
+/* ФИКС ДЛЯ ПОРТФОЛИО - РАБОЧАЯ ВЕРСИЯ */
 .show-more-btn {
-  position: relative;
-  z-index: 10;
   display: block !important;
-  margin: 0 auto !important;
+  cursor: pointer;
 }
 
-.portfolio-grid .project {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+/* На мобильных скрываем дополнительные проекты */
+@media (max-width: 768px) {
+  .additional-project {
+    display: none !important;
+  }
+  
+  .portfolio-grid.show-all .additional-project {
+    display: flex !important;
+  }
 }
 
-/* ==========================
-   ЖЕСТКИЙ КОНТРОЛЬ ДЛЯ ПОРТФОЛИО
-   ПРЕДОТВРАЩЕНИЕ НЕЖЕЛАТЕЛЬНОГО СКРОЛЛА
-   ========================== */
-.portfolio-grid {
-  overflow-anchor: none; /* Предотвращает автоматический скролл браузера */
+/* На десктопе всегда показываем все проекты */
+@media (min-width: 769px) {
+  .additional-project {
+    display: flex !important;
+  }
+  
+  .show-more-btn {
+    display: none !important;
+  }
 }
-
-.portfolio-grid .project {
-  scroll-margin-top: 0;
-}
-
-/* Гарантируем, что кнопка всегда видна */
-.show-more-btn {
-  position: relative !important;
-  z-index: 1000 !important;
-  transform: none !important;
-}
-
-/* Убираем любые переходы, которые могут вызывать скролл */
-.portfolio-grid,
-.portfolio-grid .project,
-#portfolio {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* Жесткое управление отображением проектов */
-.portfolio-grid:not(.show-all) .additional-project {
-  display: none !important;
-}
-
-.portfolio-grid.show-all .additional-project {
-  display: flex !important;
-}
-
 </style>
 
 <script>
@@ -2110,55 +2087,131 @@ function updateContactInfo(contact) {
 }
 
 
-// Функция для мобильного портфолио - ПЕРЕПИСАННАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - РАБОЧАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
-  const portfolioSection = document.getElementById('portfolio');
   
-  if (!showMoreBtn || !portfolioGrid || !portfolioSection) return;
+  if (!showMoreBtn || !portfolioGrid) {
+    console.log('❌ Элементы не найдены');
+    return;
+  }
   
-  let isExpanded = false;
+  console.log('✅ Кнопка найдена');
   
-  showMoreBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Полностью отключаем любую анимацию скролла
-    const scrollBehavior = 'auto';
-    
-    isExpanded = !isExpanded;
-    
-    if (isExpanded) {
-      // Показываем все проекты
-      portfolioGrid.classList.add('show-all');
-      showMoreBtn.textContent = 'Show less';
-    } else {
-      // Скрываем дополнительные проекты
-      portfolioGrid.classList.remove('show-all');
-      showMoreBtn.textContent = 'See all projects';
-    }
-    
-    // Жесткая блокировка любого скролла
-    setTimeout(() => {
-      window.scrollTo({
-        top: portfolioSection.offsetTop - 100,
-        behavior: 'auto'
-      });
-    }, 50);
-  });
-  
-  // Инициализация
-  if (window.innerWidth <= 768) {
-    portfolioGrid.classList.remove('show-all');
-    showMoreBtn.style.display = 'block';
-  } else {
+  // На десктопе показываем все проекты и скрываем кнопку
+  if (window.innerWidth > 768) {
     portfolioGrid.classList.add('show-all');
     showMoreBtn.style.display = 'none';
+    return;
+  }
+  
+  // На мобильных добавляем обработчик
+  showMoreBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    console.log('🟡 Клик сработал!');
+    
+    if (portfolioGrid.classList.contains('show-all')) {
+      portfolioGrid.classList.remove('show-all');
+      showMoreBtn.textContent = 'See all projects';
+      console.log('🔽 Скрыли дополнительные проекты');
+    } else {
+      portfolioGrid.classList.add('show-all');
+      showMoreBtn.textContent = 'Show less';
+      console.log('🔼 Показали все проекты');
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initPortfolioToggle);
+
+// Fixed portfolio toggle functionality
+function initPortfolioToggle() {
+  const showMoreBtn = document.getElementById('portfolio-toggle-btn');
+  const portfolioGrid = document.getElementById('portfolio-grid');
+  
+  if (!showMoreBtn || !portfolioGrid) return;
+  
+  // Check if we're on mobile
+  const isMobile = window.innerWidth <= 768;
+  
+  if (!isMobile) {
+    // On desktop, show all projects and hide button
+    portfolioGrid.classList.add('show-all');
+    showMoreBtn.style.display = 'none';
+    return;
+  }
+  
+  // On mobile, initially hide additional projects
+  const additionalProjects = portfolioGrid.querySelectorAll('.additional-project');
+  additionalProjects.forEach(project => {
+    project.style.display = 'none';
+  });
+  
+  let showingAll = false;
+  
+  showMoreBtn.addEventListener('click', function() {
+    const additionalProjects = portfolioGrid.querySelectorAll('.additional-project');
+    
+    if (showingAll) {
+      // Hide additional projects
+      additionalProjects.forEach(project => {
+        project.style.display = 'none';
+      });
+      showMoreBtn.textContent = 'See all projects';
+      showingAll = false;
+      
+      // Scroll to portfolio section
+      portfolioGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Show all projects
+      additionalProjects.forEach(project => {
+        project.style.display = 'flex';
+      });
+      showMoreBtn.textContent = 'Show less';
+      showingAll = true;
+    }
+  });
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initPortfolioToggle);
+
+// Re-initialize on window resize
+window.addEventListener('resize', initPortfolioToggle);
+
+// Load dynamic content from database
+async function loadDynamicContent() {
+  try {
+    // Load hero content
+    const heroResponse = await fetch('/api/public/content/hero_title');
+    const heroData = await heroResponse.json();
+    if (heroData.value) {
+      document.querySelector('.hero-title').textContent = heroData.value;
+    }
+    
+    // Load services
+    const servicesResponse = await fetch('/api/public/content/services');
+    const servicesData = await servicesResponse.json();
+    if (servicesData.value) {
+      try {
+        const services = JSON.parse(servicesData.value);
+        updateServices(services);
+      } catch (e) {
+        console.error('Error parsing services:', e);
+      }
+    }
+    
+  } catch (error) {
+    console.log('Using default content - admin panel not connected');
   }
 }
 
+// Load content when page loads
+document.addEventListener('DOMContentLoaded', loadDynamicContent);
+
 </script>
+
 
 </body>
 </html>
