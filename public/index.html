@@ -2019,7 +2019,79 @@ const project = formData.get('project')?.trim();
   
 </script>
 <script>
-// Dynamic content functionality - ИСПРАВЛЕННАЯ ВЕРСИЯ
+// Dynamic content loader - ПОЛНАЯ РАБОЧАЯ ВЕРСИЯ
+async function loadDynamicContent() {
+  try {
+    console.log('🔄 Loading dynamic content from database...');
+    
+    // Load hero title
+    const heroTitleResponse = await fetch('/api/public/content/hero_title');
+    if (heroTitleResponse.ok) {
+      const data = await heroTitleResponse.json();
+      if (data.value && data.value.trim()) {
+        document.getElementById('hero-heading').textContent = data.value;
+      }
+    }
+    
+    // Load hero subtitle
+    const heroSubtitleResponse = await fetch('/api/public/content/hero_subtitle');
+    if (heroSubtitleResponse.ok) {
+      const data = await heroSubtitleResponse.json();
+      if (data.value && data.value.trim()) {
+        document.querySelector('.hero-sub').textContent = data.value;
+      }
+    }
+    
+    // Load services
+    const servicesResponse = await fetch('/api/public/content/services');
+    if (servicesResponse.ok) {
+      const data = await servicesResponse.json();
+      if (data.value && data.value !== '[]') {
+        try {
+          const services = JSON.parse(data.value);
+          updateServices(services);
+        } catch (e) {
+          console.error('Error parsing services:', e);
+        }
+      }
+    }
+    
+    // Load portfolio
+    const portfolioResponse = await fetch('/api/public/content/portfolio');
+    if (portfolioResponse.ok) {
+      const data = await portfolioResponse.json();
+      if (data.value && data.value !== '[]') {
+        try {
+          const portfolio = JSON.parse(data.value);
+          updatePortfolio(portfolio);
+        } catch (e) {
+          console.error('Error parsing portfolio:', e);
+        }
+      }
+    }
+    
+    // Load contact info
+    const contactResponse = await fetch('/api/public/content/contact_info');
+    if (contactResponse.ok) {
+      const data = await contactResponse.json();
+      if (data.value && data.value !== '{}') {
+        try {
+          const contact = JSON.parse(data.value);
+          updateContactInfo(contact);
+        } catch (e) {
+          console.error('Error parsing contact info:', e);
+        }
+      }
+    }
+    
+    console.log('✅ Dynamic content loaded successfully');
+    
+  } catch (error) {
+    console.error('❌ Error loading dynamic content:', error);
+  }
+}
+
+// Function to update services
 function updateServices(services) {
   const container = document.querySelector('.services-grid');
   if (!container || !services || services.length === 0) return;
@@ -2032,6 +2104,7 @@ function updateServices(services) {
     </div>
   `).join('');
 
+  // Reinitialize animations
   setTimeout(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -2042,14 +2115,15 @@ function updateServices(services) {
   }, 100);
 }
 
+// Function to update portfolio
 function updatePortfolio(portfolio) {
   const container = document.querySelector('.portfolio-grid');
   if (!container || !portfolio || portfolio.length === 0) return;
 
   container.innerHTML = portfolio.map((item, index) => `
     <article class="project reveal ${index >= 3 ? 'additional-project' : ''}" 
-             style="${index >= 3 ? 'display: none;' : ''}">
-      <div class="project-bg" style="background-image: url('${item.image || ''}');"></div>
+             style="${index >= 3 && window.innerWidth <= 768 ? 'display: none;' : ''}">
+      <div class="project-bg" style="background-image: url('${item.image || 'https://via.placeholder.com/400x300/00d7a8/ffffff?text=Project+Image'}');"></div>
       <div class="project-content">
         <div class="meta">${item.title || 'Project'}</div>
         <p>${item.description || ''}</p>
@@ -2057,6 +2131,7 @@ function updatePortfolio(portfolio) {
     </article>
   `).join('');
 
+  // Reinitialize animations and show more button
   setTimeout(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -2064,9 +2139,12 @@ function updatePortfolio(portfolio) {
       });
     }, { threshold: 0.1 });
     document.querySelectorAll('.project.reveal').forEach(el => observer.observe(el));
+    
+    initPortfolioToggle();
   }, 100);
 }
 
+// Function to update contact info
 function updateContactInfo(contact) {
   if (contact.email) {
     document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
@@ -2075,166 +2153,33 @@ function updateContactInfo(contact) {
     });
   }
   if (contact.phone) {
-    document.querySelectorAll('p:has(.fa-phone) span').forEach(el => {
-      if (el.textContent.includes('+')) el.textContent = contact.phone;
+    document.querySelectorAll('p:has(.fa-phone) span, p:has(.fa-phone)').forEach(el => {
+      if (el.textContent.includes('+') || el.querySelector('span')) {
+        const span = el.querySelector('span') || el;
+        span.textContent = contact.phone;
+      }
     });
   }
   if (contact.address) {
-    document.querySelectorAll('p:has(.fa-map-marker-alt) span').forEach(el => {
-      if (el.textContent) el.textContent = contact.address;
+    document.querySelectorAll('p:has(.fa-map-marker-alt) span, p:has(.fa-map-marker-alt)').forEach(el => {
+      if (el.textContent || el.querySelector('span')) {
+        const span = el.querySelector('span') || el;
+        span.textContent = contact.address;
+      }
     });
   }
 }
 
-
-// Функция для мобильного портфолио - РАБОЧАЯ ВЕРСИЯ
-function initPortfolioToggle() {
-  const showMoreBtn = document.querySelector('.show-more-btn');
-  const portfolioGrid = document.querySelector('.portfolio-grid');
-  
-  if (!showMoreBtn || !portfolioGrid) {
-    console.log('❌ Элементы не найдены');
-    return;
-  }
-  
-  console.log('✅ Кнопка найдена');
-  
-  // На десктопе показываем все проекты и скрываем кнопку
-  if (window.innerWidth > 768) {
-    portfolioGrid.classList.add('show-all');
-    showMoreBtn.style.display = 'none';
-    return;
-<<<<<<< HEAD
-=======
-  }
-  
-  // На мобильных добавляем обработчик
-  showMoreBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    console.log('🟡 Клик сработал!');
-    
-    if (portfolioGrid.classList.contains('show-all')) {
-      portfolioGrid.classList.remove('show-all');
-      showMoreBtn.textContent = 'See all projects';
-      console.log('🔽 Скрыли дополнительные проекты');
-    } else {
-      portfolioGrid.classList.add('show-all');
-      showMoreBtn.textContent = 'Show less';
-      console.log('🔼 Показали все проекты');
-    }
-  });
-}
-
-document.addEventListener('DOMContentLoaded', initPortfolioToggle);
-
-// Fixed portfolio toggle functionality
-function initPortfolioToggle() {
-  const showMoreBtn = document.getElementById('portfolio-toggle-btn');
-  const portfolioGrid = document.getElementById('portfolio-grid');
-  
-  if (!showMoreBtn || !portfolioGrid) return;
-  
-  // Check if we're on mobile
-  const isMobile = window.innerWidth <= 768;
-  
-  if (!isMobile) {
-    // On desktop, show all projects and hide button
-    portfolioGrid.classList.add('show-all');
-    showMoreBtn.style.display = 'none';
-    return;
-  }
-  
-  // On mobile, initially hide additional projects
-  const additionalProjects = portfolioGrid.querySelectorAll('.additional-project');
-  additionalProjects.forEach(project => {
-    project.style.display = 'none';
-  });
-  
-  let showingAll = false;
-  
-  showMoreBtn.addEventListener('click', function() {
-    const additionalProjects = portfolioGrid.querySelectorAll('.additional-project');
-    
-    if (showingAll) {
-      // Hide additional projects
-      additionalProjects.forEach(project => {
-        project.style.display = 'none';
-      });
-      showMoreBtn.textContent = 'See all projects';
-      showingAll = false;
-      
-      // Scroll to portfolio section
-      portfolioGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      // Show all projects
-      additionalProjects.forEach(project => {
-        project.style.display = 'flex';
-      });
-      showMoreBtn.textContent = 'Show less';
-      showingAll = true;
-    }
-  });
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initPortfolioToggle);
-
-// Re-initialize on window resize
-window.addEventListener('resize', initPortfolioToggle);
-
-// Load dynamic content from database
-async function loadDynamicContent() {
-  try {
-    // Load hero content
-    const heroResponse = await fetch('/api/public/content/hero_title');
-    const heroData = await heroResponse.json();
-    if (heroData.value) {
-      document.querySelector('.hero-title').textContent = heroData.value;
-    }
-    
-    // Load services
-    const servicesResponse = await fetch('/api/public/content/services');
-    const servicesData = await servicesResponse.json();
-    if (servicesData.value) {
-      try {
-        const services = JSON.parse(servicesData.value);
-        updateServices(services);
-      } catch (e) {
-        console.error('Error parsing services:', e);
-      }
-    }
-    
-  } catch (error) {
-    console.log('Using default content - admin panel not connected');
->>>>>>> c2abf8ab28e883e4743a7683e8ef87fdb3bdb09c
-  }
-  
-  // На мобильных добавляем обработчик
-  showMoreBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    console.log('🟡 Клик сработал!');
-    
-    if (portfolioGrid.classList.contains('show-all')) {
-      portfolioGrid.classList.remove('show-all');
-      showMoreBtn.textContent = 'See all projects';
-      console.log('🔽 Скрыли дополнительные проекты');
-    } else {
-      portfolioGrid.classList.add('show-all');
-      showMoreBtn.textContent = 'Show less';
-      console.log('🔼 Показали все проекты');
-    }
-  });
-}
-
-<<<<<<< HEAD
-document.addEventListener('DOMContentLoaded', initPortfolioToggle);
-=======
 // Load content when page loads
-document.addEventListener('DOMContentLoaded', loadDynamicContent);
->>>>>>> c2abf8ab28e883e4743a7683e8ef87fdb3bdb09c
+document.addEventListener('DOMContentLoaded', function() {
+  loadDynamicContent();
+});
 
+// Also update content when returning to page
+window.addEventListener('pageshow', function() {
+  loadDynamicContent();
+});
 </script>
-
 
 </body>
 </html>
