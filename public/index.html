@@ -967,7 +967,7 @@
       </div>
     </article>
 
-    <article class="project reveal additional-project" aria-label="Brand Identity for TechStart" style="display: none;">
+    <article class="project reveal additional-project" aria-label="Brand Identity for TechStart">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/1877f2/ffffff?text=TechStart+Brand');"></div>
       <div class="project-content">
         <div class="meta">Brand Identity for TechStart</div>
@@ -975,7 +975,7 @@
       </div>
     </article>
 
-    <article class="project reveal additional-project" aria-label="Product Packaging" style="display: none;">
+    <article class="project reveal additional-project" aria-label="Product Packaging">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/00b894/ffffff?text=Product+Packaging');"></div>
       <div class="project-content">
         <div class="meta">Product Packaging</div>
@@ -983,7 +983,7 @@
       </div>
     </article>
 
-    <article class="project reveal additional-project" aria-label="Social Media Kit" style="display: none;">
+    <article class="project reveal additional-project" aria-label="Social Media Kit">
       <div class="project-bg" style="background-image: url('https://via.placeholder.com/400x300/8e44ad/ffffff?text=Social+Media+Kit');"></div>
       <div class="project-content">
         <div class="meta">Social Media Kit</div>
@@ -993,8 +993,8 @@
   </div>
 
   <div style="text-align:center;margin-top:18px;width:100%">
-  <button class="btn show-more-btn" id="portfolio-toggle-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin:0 auto">See all projects</button>
-</div>
+    <button class="btn show-more-btn" id="portfolio-toggle-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin:0 auto">See all projects</button>
+  </div>
 </section>
 
         <section id="services" class="container reveal" aria-labelledby="services-title">
@@ -1851,58 +1851,34 @@ const project = formData.get('project')?.trim();
     }
   }
 
-.portfolio-grid.show-all {
-  position: relative;
-  z-index: 5;
-}
 
+/* ФИКС ДЛЯ ПОРТФОЛИО - РАБОЧАЯ ВЕРСИЯ */
 .show-more-btn {
-  position: relative;
-  z-index: 10;
   display: block !important;
-  margin: 0 auto !important;
+  cursor: pointer;
 }
 
-.portfolio-grid .project {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+/* На мобильных скрываем дополнительные проекты */
+@media (max-width: 768px) {
+  .additional-project {
+    display: none !important;
+  }
+  
+  .portfolio-grid.show-all .additional-project {
+    display: flex !important;
+  }
 }
 
-/* ==========================
-   ЖЕСТКИЙ КОНТРОЛЬ ДЛЯ ПОРТФОЛИО
-   ПРЕДОТВРАЩЕНИЕ НЕЖЕЛАТЕЛЬНОГО СКРОЛЛА
-   ========================== */
-.portfolio-grid {
-  overflow-anchor: none; /* Предотвращает автоматический скролл браузера */
+/* На десктопе всегда показываем все проекты */
+@media (min-width: 769px) {
+  .additional-project {
+    display: flex !important;
+  }
+  
+  .show-more-btn {
+    display: none !important;
+  }
 }
-
-.portfolio-grid .project {
-  scroll-margin-top: 0;
-}
-
-/* Гарантируем, что кнопка всегда видна */
-.show-more-btn {
-  position: relative !important;
-  z-index: 1000 !important;
-  transform: none !important;
-}
-
-/* Убираем любые переходы, которые могут вызывать скролл */
-.portfolio-grid,
-.portfolio-grid .project,
-#portfolio {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* Жесткое управление отображением проектов */
-.portfolio-grid:not(.show-all) .additional-project {
-  display: none !important;
-}
-
-.portfolio-grid.show-all .additional-project {
-  display: flex !important;
-}
-
 </style>
 
 <script>
@@ -2110,53 +2086,43 @@ function updateContactInfo(contact) {
 }
 
 
-// Функция для мобильного портфолио - ПЕРЕПИСАННАЯ ВЕРСИЯ
+// Функция для мобильного портфолио - РАБОЧАЯ ВЕРСИЯ
 function initPortfolioToggle() {
   const showMoreBtn = document.querySelector('.show-more-btn');
   const portfolioGrid = document.querySelector('.portfolio-grid');
-  const portfolioSection = document.getElementById('portfolio');
   
-  if (!showMoreBtn || !portfolioGrid || !portfolioSection) return;
+  if (!showMoreBtn || !portfolioGrid) {
+    console.log('❌ Элементы не найдены');
+    return;
+  }
   
-  let isExpanded = false;
+  console.log('✅ Кнопка найдена');
   
-  showMoreBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Полностью отключаем любую анимацию скролла
-    const scrollBehavior = 'auto';
-    
-    isExpanded = !isExpanded;
-    
-    if (isExpanded) {
-      // Показываем все проекты
-      portfolioGrid.classList.add('show-all');
-      showMoreBtn.textContent = 'Show less';
-    } else {
-      // Скрываем дополнительные проекты
-      portfolioGrid.classList.remove('show-all');
-      showMoreBtn.textContent = 'See all projects';
-    }
-    
-    // Жесткая блокировка любого скролла
-    setTimeout(() => {
-      window.scrollTo({
-        top: portfolioSection.offsetTop - 100,
-        behavior: 'auto'
-      });
-    }, 50);
-  });
-  
-  // Инициализация
-  if (window.innerWidth <= 768) {
-    portfolioGrid.classList.remove('show-all');
-    showMoreBtn.style.display = 'block';
-  } else {
+  // На десктопе показываем все проекты и скрываем кнопку
+  if (window.innerWidth > 768) {
     portfolioGrid.classList.add('show-all');
     showMoreBtn.style.display = 'none';
+    return;
   }
+  
+  // На мобильных добавляем обработчик
+  showMoreBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    console.log('🟡 Клик сработал!');
+    
+    if (portfolioGrid.classList.contains('show-all')) {
+      portfolioGrid.classList.remove('show-all');
+      showMoreBtn.textContent = 'See all projects';
+      console.log('🔽 Скрыли дополнительные проекты');
+    } else {
+      portfolioGrid.classList.add('show-all');
+      showMoreBtn.textContent = 'Show less';
+      console.log('🔼 Показали все проекты');
+    }
+  });
 }
+
+document.addEventListener('DOMContentLoaded', initPortfolioToggle);
 
 </script>
 

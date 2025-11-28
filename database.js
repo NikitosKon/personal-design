@@ -1,6 +1,7 @@
+// database.js - ОБНОВЛЕННАЯ ВЕРСИЯ ДЛЯ RAILWAY MYSQL
 import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -8,6 +9,8 @@ let pool;
 
 export async function getPool() {
   if (pool) return pool;
+
+  console.log('🔧 Initializing MySQL database connection for Railway...');
 
   const config = {
     host: process.env.MYSQLHOST || 'localhost',
@@ -17,83 +20,145 @@ export async function getPool() {
     port: process.env.MYSQLPORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
-    decimalNumbers: true
+    decimalNumbers: true,
+    reconnect: true,
+    acquireTimeout: 60000,
+    timeout: 60000,
+    connectTimeout: 60000
   };
 
+  // Проверяем наличие DATABASE_URL от Railway (основной способ)
   if (process.env.DATABASE_URL) {
     try {
+      console.log('🔗 Using DATABASE_URL from Railway');
       const url = new URL(process.env.DATABASE_URL);
       config.host = url.hostname;
       config.port = url.port;
       config.user = url.username;
       config.password = url.password;
       config.database = url.pathname.replace(/^\//, '');
+      
+      console.log(`📡 MySQL Config: ${config.host}:${config.port}, DB: ${config.database}`);
     } catch (e) {
-      console.log('Using individual MySQL config');
+      console.log('⚠️ Error parsing DATABASE_URL, using individual config');
     }
+  } else {
+    console.log('ℹ️ Using individual MySQL environment variables');
+    console.log(`📡 Host: ${config.host}, DB: ${config.database}`);
   }
 
-  pool = mysql.createPool(config);
+  try {
+    pool = mysql.createPool(config);
+    
+    // Тестируем соединение
+    const testConnection = await pool.getConnection();
+    console.log('✅ MySQL connection successful');
+    testConnection.release();
+    
+  } catch (error) {
+    console.error('❌ MySQL connection failed:', error.message);
+    console.error('💡 Please check your Railway MySQL configuration');
+    throw error;
+  }
+
   return pool;
 }
 
 export async function initDatabase() {
   const db = await getPool();
 
-  // Создаём таблицы
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS admins (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(100) NOT NULL UNIQUE,
-      password_hash VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+  try {
+    console.log('🔄 Initializing database tables...');
 
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS messages (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(200),
-      email VARCHAR(200),
-      project_type VARCHAR(200),
-      message TEXT,
-      status ENUM('new','read','replied') DEFAULT 'new',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    // Создаём таблицы с улучшенной обработкой ошибок
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS admins (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    console.log('✅ admins table ready');
 
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS content (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title VARCHAR(200) NOT NULL UNIQUE,
-      content TEXT,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(200),
+        email VARCHAR(200),
+        project_type VARCHAR(200),
+        message TEXT,
+        status ENUM('new','read','replied') DEFAULT 'new',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    console.log('✅ messages table ready');
 
-  // Добавляем тестового админа если нет
-  const [rows] = await db.execute(`SELECT COUNT(*) AS cnt FROM admins`);
-  if (rows[0].cnt === 0) {
-    const hash = await bcrypt.hash('thklty13$', 10);
-    await db.execute(`INSERT INTO admins (username, password_hash) VALUES (?, ?)`, ['tykhon', hash]);
-    console.log('✅ Test admin created: tykhon / thklty13$');
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS content (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(200) NOT NULL UNIQUE,
+        content TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+    console.log('✅ content table ready');
+
+    // Добавляем тестового админа если нет
+    const [rows] = await db.execute(`SELECT COUNT(*) AS cnt FROM admins`);
+    const count = rows[0].cnt;
+    
+    if (count === 0) {
+      const hash = await bcrypt.hash('thklty13$', 10);
+      await db.execute(`INSERT INTO admins (username, password_hash) VALUES (?, ?)`, ['tykhon', hash]);
+      console.log('✅ Test admin created: tykhon / thklty13$');
+    } else {
+      console.log('✅ Admin user exists');
+    }
+
+    // Добавляем дефолтный контент
+    const defaultContent = [
+      ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
+      ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
+      ['services', '[]'],
+      ['portfolio', '[]'],
+      ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
+    ];
+
+    let insertedCount = 0;
+    for (const [key, value] of defaultContent) {
+      try {
+        await db.execute(
+          'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
+          [key, value]
+        );
+        insertedCount++;
+        console.log(`✅ Added default content: ${key}`);
+      } catch (error) {
+        console.log(`ℹ️ Content "${key}" already exists`);
+      }
+    }
+
+    console.log(`✅ Default content initialized (${insertedCount} items)`);
+    console.log('🎉 Database initialization completed successfully');
+
+  } catch (error) {
+    console.error('❌ Database initialization error:', error);
+    console.error('💡 Please check your database configuration on Railway');
+    throw error;
   }
-
-  // Добавляем дефолтный контент
-  const defaultContent = [
-    ['hero_title', 'We craft premium logos, posters, social content, promo videos & 3D visuals.'],
-    ['hero_subtitle', 'Fast delivery, polished aesthetics, and conversion-driven visuals. Get a free sample for your first project — no strings attached.'],
-    ['services', '[]'],
-    ['portfolio', '[]'],
-    ['contact_info', '{"email":"hello@personaldesign.com","phone":"+353 1 234 5678","address":"Dublin, Ireland"}']
-  ];
-
-  for (const [key, value] of defaultContent) {
-    await db.execute(
-      'INSERT IGNORE INTO content (title, content) VALUES (?, ?)',
-      [key, value]
-    );
-  }
-
-  console.log('✅ Database initialized');
 }
+
+// Функция для проверки состояния базы данных
+export async function checkDatabaseHealth() {
+  try {
+    const db = await getPool();
+    const [result] = await db.execute('SELECT 1 as health_check');
+    return { healthy: true, message: 'Database connection OK' };
+  } catch (error) {
+    return { healthy: false, message: error.message };
+  }
+}
+
+// Убедитесь, что экспортируем функцию для использования в index.js
+export default { getPool, initDatabase, checkDatabaseHealth };
